@@ -1,121 +1,130 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>US Chat</title>
     <link rel="stylesheet" href="/style.css">
 </head>
+
 <body>
 
-<div class="container">
+    <div class="container">
 
-    <div class="top-bar">
+        <div class="top-bar">
 
-        <h2>US Chat</h2>
+            <h2>US Chat</h2>
 
-        <div>
+            <div>
 
-            <a href="/logout">
-                <button class="logout-btn">Logout</button>
-            </a>
+                <a href="/logout">
+                    <button class="logout-btn">Logout</button>
+                </a>
 
-            <form action="/clear-chat" method="POST" style="display:inline;">
+                <form action="/clear-chat" method="POST" style="display:inline;">
 
-    <button class="clear-btn">
-        Clear
-    </button>
+                    <button class="clear-btn">
+                        Clear
+                    </button>
 
-</form>
+                </form>
+
+            </div>
 
         </div>
 
+        <div class="chat-box" id="messages">
+
+            <% messages.forEach(msg=> { %>
+
+                <div class="message <%= msg.sender === user ? 'my-message' : 'other-message' %>">
+
+                    <div class="msg-top">
+
+                        <strong>
+                            <%= msg.sender %>
+                        </strong>
+
+                        <span class="time">
+                            <%= msg.time %>
+                        </span>
+
+                    </div>
+
+                    <div>
+                        <%= msg.text %>
+                    </div>
+                </div>
+
+                <% }) %>
+
+        </div>
+
+        <form id="chat-form">
+
+            <input id="msg" autocomplete="off" placeholder="Type message...">
+
+            <button>Send</button>
+
+        </form>
+
     </div>
 
-    <div class="chat-box" id="messages">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-        <% messages.forEach(msg => { %>
+    <script src="/socket.io/socket.io.js"></script>
 
-            <div class="message <%= msg.sender === user ? 'my-message' : 'other-message' %>">
+    <script>
 
-               <div class="msg-top">
+        const socket = io();
 
-    <strong><%= msg.sender %></strong>
+        const SECRET_KEY = "mySuperSecretKey";
 
-    <span class="time">
-        <%= msg.time %>
-    </span>
+        const form = document.getElementById("chat-form");
 
-</div>
+        const input = document.getElementById("msg");
 
-<div>
-    <%= msg.text %>
-</div>
-            </div>
+        const messages = document.getElementById("messages");
 
-        <% }) %>
+        const username = "<%= user %>";
 
-    </div>
+        form.addEventListener("submit", function (e) {
 
-    <form id="chat-form">
+            e.preventDefault();
 
-        <input
-            id="msg"
-            autocomplete="off"
-            placeholder="Type message..."
-        >
+            if (input.value) {
 
-        <button>Send</button>
+                const encryptedMessage = CryptoJS.AES.encrypt(
+                    input.value,
+                    SECRET_KEY
+                ).toString();
 
-    </form>
+                socket.emit("chat message", {
+                    user: username,
+                    message: encryptedMessage
+                });
 
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
-
-<script>
-
-const socket = io();
-
-const form = document.getElementById("chat-form");
-
-const input = document.getElementById("msg");
-
-const messages = document.getElementById("messages");
-
-const username = "<%= user %>";
-
-form.addEventListener("submit", function(e){
-
-    e.preventDefault();
-
-    if(input.value){
-
-        socket.emit("chat message", {
-            user: username,
-            message: input.value
+                input.value = "";
+            }
         });
 
-        input.value = "";
-    }
-});
+        socket.on("chat message", function (data) {
 
-socket.on("chat message", function(data){
+            const div = document.createElement("div");
 
-    const div = document.createElement("div");
+            div.classList.add("message");
 
-    div.classList.add("message");
+            if (data.user === username) {
+                div.classList.add("my-message");
+            } else {
+                div.classList.add("other-message");
+            }
 
-    if(data.user === username){
-        div.classList.add("my-message");
-    } else {
-        div.classList.add("other-message");
-    }
+            const currentTime = new Date().toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
 
-    const currentTime = new Date().toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit'
-});
-
-div.innerHTML = `
+            div.innerHTML = `
 
     <div class="msg-top">
 
@@ -128,16 +137,22 @@ div.innerHTML = `
     </div>
 
     <div>
-        ${data.message}
+        ${
+    CryptoJS.AES.decrypt(
+        data.message,
+        SECRET_KEY
+    ).toString(CryptoJS.enc.Utf8)
+}
     </div>
 
 `;
-    messages.appendChild(div);
+            messages.appendChild(div);
 
-    messages.scrollTop = messages.scrollHeight;
-});
+            messages.scrollTop = messages.scrollHeight;
+        });
 
-</script>
+    </script>
 
 </body>
+
 </html>
