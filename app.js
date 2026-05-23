@@ -1,114 +1,79 @@
 require("dotenv").config();
 
-
-
-/* ================= IMPORTS ================= */
-
 const express = require("express");
-
 const http = require("http");
-
 const mongoose = require("mongoose");
-
 const path = require("path");
-
 const bcrypt = require("bcrypt");
-
 const session = require("express-session");
-
 const MongoStore = require("connect-mongo").default;
 
-
-
-/* ================= APP ================= */
-
 const app = express();
-
 const server = http.createServer(app);
 
-
-
-/* ================= SOCKET.IO ================= */
-
 const { Server } = require("socket.io");
-
 const io = new Server(server);
 
-
-
-/* ================= MODELS ================= */
+// ================= MODELS =================
 
 const User = require("./models/User");
-
 const Message = require("./models/Message");
+const Request = require("./models/Request");
 
-
-
-/* ================= DATABASE ================= */
+// ================= DATABASE =================
 
 mongoose.connect(process.env.MONGO_URL)
-
 .then(() => {
-
     console.log("MongoDB Connected");
-
 })
-
 .catch((err) => {
-
     console.log(err);
-
 });
 
-
-
-/* ================= VIEW ENGINE ================= */
+// ================= VIEW ENGINE =================
 
 app.set("view engine", "ejs");
 
-app.set("views", path.join(__dirname, "views"));
-
-
-
-/* ================= MIDDLEWARE ================= */
-
-app.use(express.static(path.join(__dirname, "public")));
-
-app.use(express.urlencoded({ extended: true }));
-
-
-
-/* ================= SESSION ================= */
-
-app.use(
-
-    session({
-
-        secret: process.env.SESSION_SECRET,
-
-        resave: false,
-
-        saveUninitialized: false,
-
-        store: MongoStore.create({
-
-            mongoUrl: process.env.MONGO_URL
-
-        }),
-
-        cookie: {
-
-            maxAge: 1000 * 60 * 60 * 24
-
-        }
-
-    })
-
+app.set(
+    "views",
+    path.join(__dirname, "views")
 );
 
+// ================= MIDDLEWARE =================
 
+app.use(express.static(
+    path.join(__dirname, "public")
+));
 
-/* ================= LOGIN CHECK ================= */
+app.use(express.urlencoded({
+    extended: true
+}));
+
+// ================= SESSION =================
+
+app.use(session({
+
+    secret: process.env.SESSION_SECRET,
+
+    resave: false,
+
+    saveUninitialized: false,
+
+    store: MongoStore.create({
+
+        mongoUrl: process.env.MONGO_URL
+
+    }),
+
+    cookie: {
+
+        maxAge: 1000 * 60 * 60 * 24
+
+    }
+
+}));
+
+// ================= LOGIN CHECK =================
 
 function isLoggedIn(req, res, next){
 
@@ -116,29 +81,23 @@ function isLoggedIn(req, res, next){
 
         next();
 
-    }
+    } else {
 
-    else{
-
-        res.redirect("/");
+        res.redirect("/login");
 
     }
 
 }
 
-
-
-/* =======================================================
-   LOGIN PAGE
-======================================================= */
+// ================= HOME =================
 
 app.get("/", (req, res) => {
 
-    res.render("login");
+    res.redirect("/login");
 
 });
 
-
+// ================= LOGIN PAGE =================
 
 app.get("/login", (req, res) => {
 
@@ -146,73 +105,56 @@ app.get("/login", (req, res) => {
 
 });
 
+// ================= ADMIN LOGIN PAGE =================
 
+app.get("/admin-login", (req, res) => {
 
-/* =======================================================
-   REGISTER PAGE
-======================================================= */
-
-app.get("/register", (req, res) => {
-
-    res.render("register");
+    res.render("admin-login");
 
 });
 
+// ================= ADMIN LOGIN =================
 
-
-/* =======================================================
-   REGISTER USER
-======================================================= */
-
-app.post("/register", async (req, res) => {
+app.post("/admin-login", async (req, res) => {
 
     try{
 
         const { username, password } = req.body;
 
-
-
-        const existingUser = await User.findOne({
-
+        const admin = await User.findOne({
             username
-
         });
 
+        if(!admin){
 
-
-        if(existingUser){
-
-            return res.send("Username already exists");
+            return res.send("Admin not found");
 
         }
 
-
-
-        const hashedPassword = await bcrypt.hash(
-
+        const valid = await bcrypt.compare(
             password,
-
-            10
-
+            admin.password
         );
 
+        if(!valid){
 
+            return res.send("Wrong password");
 
-        const newUser = new User({
+        }
 
-            username,
+        // ONLY UMAR IS ADMIN
 
-            password: hashedPassword
+        if(admin.username !== "umar"){
 
-        });
+            return res.send("Access Denied");
 
+        }
 
+        req.session.user = admin.username;
 
-        await newUser.save();
+        req.session.admin = true;
 
-
-
-        res.redirect("/login");
+        res.redirect("/admin");
 
     }
 
@@ -220,17 +162,13 @@ app.post("/register", async (req, res) => {
 
         console.log(err);
 
-        res.send("Register Error");
+        res.send("Admin Login Error");
 
     }
 
 });
 
-
-
-/* =======================================================
-   LOGIN USER
-======================================================= */
+// ================= USER LOGIN =================
 
 app.post("/login", async (req, res) => {
 
@@ -238,15 +176,9 @@ app.post("/login", async (req, res) => {
 
         const { username, password } = req.body;
 
-
-
         const user = await User.findOne({
-
             username
-
         });
-
-
 
         if(!user){
 
@@ -254,29 +186,28 @@ app.post("/login", async (req, res) => {
 
         }
 
+        if(user.approved !== true){
 
-
-        const valid = await bcrypt.compare(
-
-            password,
-
-            user.password
-
-        );
-
-
-
-        if(!valid){
-
-            return res.send("Wrong Password");
+            return res.send(
+                "Waiting for admin approval"
+            );
 
         }
 
+        const valid = await bcrypt.compare(
+            password,
+            user.password
+        );
 
+        if(!valid){
 
-        req.session.user = username;
+            return res.send("Wrong password");
 
+        }
 
+        req.session.user = user.username;
+
+        req.session.admin = false;
 
         res.redirect("/users");
 
@@ -292,35 +223,52 @@ app.post("/login", async (req, res) => {
 
 });
 
+// ================= REGISTER PAGE =================
 
+app.get("/register", (req, res) => {
 
-/* =======================================================
-   USERS PAGE
-======================================================= */
+    res.render("register");
 
-app.get("/users", isLoggedIn, async (req, res) => {
+});
+
+// ================= REGISTER USER =================
+
+app.post("/register", async (req, res) => {
 
     try{
 
-        const users = await User.find({
+        const { username, password } = req.body;
 
-            username: {
+        const existing = await User.findOne({
+            username
+        });
 
-                $ne: req.session.user
+        if(existing){
 
-            }
+            return res.send(
+                "Username already exists"
+            );
+
+        }
+
+        const hashedPassword = await bcrypt.hash(
+            password,
+            10
+        );
+
+        const newUser = new User({
+
+            username,
+
+            password: hashedPassword,
+
+            approved: false
 
         });
 
+        await newUser.save();
 
-
-        res.render("users", {
-
-            currentUser: req.session.user,
-
-            users
-
-        });
+        res.render("pending");
 
     }
 
@@ -328,126 +276,416 @@ app.get("/users", isLoggedIn, async (req, res) => {
 
         console.log(err);
 
-        res.send("Users Page Error");
+        res.send("Registration Error");
 
     }
 
 });
 
+// ================= ADMIN PANEL =================
 
+app.get("/admin", isLoggedIn, async (req, res) => {
 
-/* =======================================================
-   PRIVATE CHAT PAGE
-======================================================= */
+    if(!req.session.admin){
 
-app.get("/chat/:friend", isLoggedIn, async (req, res) => {
-
-    try{
-
-        const currentUser = req.session.user;
-
-        const friend = req.params.friend;
-
-
-
-        const ROOM_ID = [currentUser, friend]
-
-            .sort()
-
-            .join("_");
-
-
-
-        const messages = await Message.find({
-
-            room: ROOM_ID
-
-        });
-
-
-
-        const formattedMessages = messages.map((msg) => {
-
-            return {
-
-                sender: msg.sender,
-
-                text: msg.text,
-
-                time: new Date(msg.createdAt)
-                .toLocaleTimeString([], {
-
-                    hour: "2-digit",
-
-                    minute: "2-digit"
-
-                })
-
-            };
-
-        });
-
-
-
-        res.render("chat", {
-
-            user: currentUser,
-
-            friend,
-
-            room: ROOM_ID,
-
-            messages: formattedMessages
-
-        });
+        return res.send("Access Denied");
 
     }
 
-    catch(err){
+    const pendingUsers = await User.find({
 
-        console.log(err);
+        approved: false
 
-        res.send("Chat Error");
+    });
 
-    }
+    res.render("admin", {
 
-});
-
-
-
-/* =======================================================
-   LOGOUT
-======================================================= */
-
-app.get("/logout", (req, res) => {
-
-    req.session.destroy(() => {
-
-        res.redirect("/");
+        pendingUsers
 
     });
 
 });
 
+// ================= APPROVE USER =================
 
+app.get("/approve/:username",
 
-/* =======================================================
-   SOCKET.IO
-======================================================= */
+    isLoggedIn,
+
+    async (req, res) => {
+
+    try{
+
+        if(!req.session.admin){
+
+            return res.send("Access Denied");
+
+        }
+
+        await User.findOneAndUpdate(
+
+            {
+
+                username: req.params.username
+
+            },
+
+            {
+
+                approved: true
+
+            }
+
+        );
+
+        res.redirect("/admin");
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+        res.send("Approval Error");
+
+    }
+
+});
+
+// ================= DELETE USER =================
+
+app.get("/delete-user/:username",
+
+    isLoggedIn,
+
+    async (req, res) => {
+
+    try{
+
+        if(!req.session.admin){
+
+            return res.send("Access Denied");
+
+        }
+
+        await User.findOneAndDelete({
+
+            username: req.params.username
+
+        });
+
+        await Request.deleteMany({
+
+            $or: [
+
+                { from: req.params.username },
+
+                { to: req.params.username }
+
+            ]
+
+        });
+
+        await Message.deleteMany({
+
+            sender: req.params.username
+
+        });
+
+        res.redirect("/admin");
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+        res.send("Delete Error");
+
+    }
+
+});
+
+// ================= USERS PAGE =================
+
+app.get("/users", isLoggedIn, async (req, res) => {
+
+    const currentUser = req.session.user;
+
+    const users = await User.find({
+
+        username: {
+
+            $ne: currentUser
+
+        },
+
+        approved: true
+
+    });
+
+    const requests = await Request.find({
+
+        $or: [
+
+            { from: currentUser },
+
+            { to: currentUser }
+
+        ]
+
+    });
+
+    res.render("users", {
+
+        users,
+
+        currentUser,
+
+        requests
+
+    });
+
+});
+
+// ================= SEND REQUEST =================
+
+app.get("/request/:username",
+
+    isLoggedIn,
+
+    async (req, res) => {
+
+    const existing = await Request.findOne({
+
+        $or: [
+
+            {
+
+                from: req.session.user,
+
+                to: req.params.username
+
+            },
+
+            {
+
+                from: req.params.username,
+
+                to: req.session.user
+
+            }
+
+        ]
+
+    });
+
+    if(existing){
+
+        return res.redirect("/users");
+
+    }
+
+    await Request.create({
+
+        from: req.session.user,
+
+        to: req.params.username,
+
+        status: "pending"
+
+    });
+
+    res.redirect("/users");
+
+});
+
+// ================= REQUEST PAGE =================
+
+app.get("/requests", isLoggedIn, async (req, res) => {
+
+    const requests = await Request.find({
+
+        to: req.session.user,
+
+        status: "pending"
+
+    });
+
+    res.render("requests", {
+
+        requests
+
+    });
+
+});
+
+// ================= ACCEPT REQUEST =================
+
+app.get("/accept/:id",
+
+    isLoggedIn,
+
+    async (req, res) => {
+
+    await Request.findByIdAndUpdate(
+
+        req.params.id,
+
+        {
+
+            status: "accepted"
+
+        }
+
+    );
+
+    res.redirect("/requests");
+
+});
+
+// ================= DECLINE REQUEST =================
+
+app.get("/decline/:id",
+
+    isLoggedIn,
+
+    async (req, res) => {
+
+    await Request.findByIdAndDelete(
+
+        req.params.id
+
+    );
+
+    res.redirect("/requests");
+
+});
+
+// ================= CHAT PAGE =================
+
+app.get("/chat/:username",
+
+    isLoggedIn,
+
+    async (req, res) => {
+
+    const currentUser = req.session.user;
+
+    const otherUser = req.params.username;
+
+    // CHECK PERMISSION
+
+    const allowed = await Request.findOne({
+
+        $or: [
+
+            {
+
+                from: currentUser,
+
+                to: otherUser,
+
+                status: "accepted"
+
+            },
+
+            {
+
+                from: otherUser,
+
+                to: currentUser,
+
+                status: "accepted"
+
+            }
+
+        ]
+
+    });
+
+    if(!allowed){
+
+        return res.send(
+            "You are not allowed to chat"
+        );
+
+    }
+
+    const room = [
+
+        currentUser,
+
+        otherUser
+
+    ]
+
+    .sort()
+
+    .join("_");
+
+    const messages = await Message.find({
+        room
+    });
+
+    const formattedMessages = messages.map((msg) => {
+
+        return {
+
+            sender: msg.sender,
+
+            text: msg.text,
+
+            time: new Date(
+                msg.createdAt
+            ).toLocaleTimeString([], {
+
+                hour: "2-digit",
+                minute: "2-digit"
+
+            })
+
+        };
+
+    });
+
+    res.render("chat", {
+
+        user: currentUser,
+
+        room,
+
+        messages: formattedMessages,
+
+        chattingWith: otherUser
+
+    });
+
+});
+
+// ================= LOGOUT =================
+
+app.get("/logout", (req, res) => {
+
+    req.session.destroy(() => {
+
+        res.redirect("/login");
+
+    });
+
+});
+
+// ================= SOCKET.IO =================
 
 io.on("connection", (socket) => {
 
     console.log("User Connected");
-
-
 
     socket.on("join room", (room) => {
 
         socket.join(room);
 
     });
-
-
 
     socket.on("chat message", async (data) => {
 
@@ -463,27 +701,31 @@ io.on("connection", (socket) => {
 
             });
 
-
-
             await newMessage.save();
 
+            io.to(data.room).emit(
 
+                "chat message",
 
-            io.to(data.room).emit("chat message", {
+                {
 
-                user: data.user,
+                    user: data.user,
 
-                message: data.message,
+                    message: data.message,
 
-                time: new Date().toLocaleTimeString([], {
+                    time: new Date()
 
-                    hour: "2-digit",
+                    .toLocaleTimeString([], {
 
-                    minute: "2-digit"
+                        hour: "2-digit",
 
-                })
+                        minute: "2-digit"
 
-            });
+                    })
+
+                }
+
+            );
 
         }
 
@@ -495,8 +737,6 @@ io.on("connection", (socket) => {
 
     });
 
-
-
     socket.on("disconnect", () => {
 
         console.log("User Disconnected");
@@ -505,18 +745,24 @@ io.on("connection", (socket) => {
 
 });
 
+// ================= ERROR HANDLER =================
 
+app.use((err, req, res, next) => {
 
-/* =======================================================
-   SERVER
-======================================================= */
+    console.log(err);
+
+    res.status(500).send(err.message);
+
+});
+
+// ================= SERVER =================
 
 const PORT = process.env.PORT || 3000;
 
-
-
 server.listen(PORT, () => {
 
-    console.log(`Server Running On Port ${PORT}`);
+    console.log(
+        `Server Running On Port ${PORT}`
+    );
 
 });

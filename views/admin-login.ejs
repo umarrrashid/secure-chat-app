@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Admin Login</title>
+
+    <link rel="stylesheet" href="/style.css">
+
+</head>
+
+<body>
+
+<div class="login-container">
+
+    <div class="login-card">
+
+        <h1>Admin Panel</h1>
+
+        <p class="subtitle">
+
+            Secure Admin Access
+
+        </p>
+
+        <form action="/admin-login" method="POST">
+
+            <input
+                type="text"
+                name="username"
+                placeholder="Admin Username"
+                required
+            >
+
+            <input
+                type="password"
+                name="password"
+                placeholder="Admin Password"
+                required
+            >
+
+            <button type="submit">
+
+                Login
+
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

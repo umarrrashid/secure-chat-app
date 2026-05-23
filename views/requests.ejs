@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Requests</title>
+
+    <style>
+
+        body{
+
+            font-family:Arial;
+
+            background:#111827;
+
+            color:white;
+
+            padding:40px;
+
+        }
+
+        .card{
+
+            background:#1f2937;
+
+            padding:20px;
+
+            margin-bottom:20px;
+
+            border-radius:15px;
+
+        }
+
+        a{
+
+            padding:10px 20px;
+
+            border-radius:10px;
+
+            text-decoration:none;
+
+            color:white;
+
+            margin-right:10px;
+
+        }
+
+        .accept{
+
+            background:#22c55e;
+
+        }
+
+        .decline{
+
+            background:#ef4444;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<h1>Chat Requests</h1>
+
+<% requests.forEach((request) => { %>
+
+    <div class="card">
+
+        <h2>
+
+            <%= request.from %>
+            wants to chat
+
+        </h2>
+
+        <a
+           class="accept"
+           href="/accept/<%= request._id %>">
+
+           Approve
+
+        </a>
+
+        <a
+           class="decline"
+           href="/decline/<%= request._id %>">
+
+           Delete
+
+        </a>
+
+    </div>
+
+<% }) %>
+
+</body>
+
+</html>

@@ -449,3 +449,51 @@ body{
 
     opacity: 0.9;
 }
+
+/* =========================================
+   AUTH BUTTONS
+========================================= */
+
+.auth-buttons{
+
+    display: flex;
+
+    gap: 12px;
+
+    margin-top: 18px;
+
+    justify-content: center;
+
+}
+
+
+
+.secondary-btn{
+
+    text-decoration: none;
+
+    padding: 12px 20px;
+
+    border-radius: 12px;
+
+    background: rgba(255,255,255,0.12);
+
+    color: white;
+
+    font-size: 14px;
+
+    transition: 0.3s;
+
+    border: 1px solid rgba(255,255,255,0.15);
+
+}
+
+
+
+.secondary-btn:hover{
+
+    background: rgba(255,255,255,0.2);
+
+    transform: translateY(-2px);
+
+}
