@@ -70,15 +70,15 @@ body{
 
 /* CHAT */
 
-    .container{
-    width:1000px;
-    height:800px;
-    background:white;
-    border-radius:25px;
-    overflow:hidden;
-    box-shadow:0 10px 30px rgba(0,0,0,0.3);
-    display:flex;
-    flex-direction:column;
+   .chat-container{
+    width: 900px;
+    height: 700px;
+    background: white;
+    border-radius: 25px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
 }
 
 
