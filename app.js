@@ -49,12 +49,10 @@ function isLoggedIn(req, res, next){
 }
 
 app.get("/", (req, res) => {
-    res.render("login");
-});
+return res.render("login");});
 
 app.get("/login", (req, res) => {
-    res.render("login");
-});
+return res.render("login");});
 
 app.post("/login", async (req, res) => {
 
@@ -131,6 +129,11 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+app.use((err, req, res, next) => {
+    console.log(err);
+    res.status(500).send(err.message);
+});
 
 server.listen(PORT, () => {
     console.log(`Server Running On Port ${PORT}`);
