@@ -70,9 +70,9 @@ body{
 
 /* CHAT */
 
-.container{
-    width:420px;
-    height:700px;
+    .container{
+    width:1000px;
+    height:800px;
     background:white;
     border-radius:25px;
     overflow:hidden;
@@ -80,6 +80,7 @@ body{
     display:flex;
     flex-direction:column;
 }
+
 
 .top-bar{
     background:#111827;
