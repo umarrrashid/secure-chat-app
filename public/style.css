@@ -129,13 +129,13 @@ body{
 }
 
 .my-message{
-    background:#00c853;
+    background:#525def;
     color:white;
     margin-left:auto;
 }
 
 .other-message{
-    background:#e5e7eb;
+    background:#b9cef8;
     color:black;
 }
 
@@ -159,7 +159,7 @@ body{
     margin-left:10px;
     padding:15px 20px;
     border:none;
-    background:#00c853;
+    background:#20407b;
     color:white;
     border-radius:12px;
     cursor:pointer;

@@ -110,10 +110,28 @@ socket.on("chat message", function(data){
         div.classList.add("other-message");
     }
 
-    div.innerHTML = `
-        <strong>${data.user}:</strong> ${data.message}
-    `;
+    const currentTime = new Date().toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit'
+});
 
+div.innerHTML = `
+
+    <div class="msg-top">
+
+        <strong>${data.user}</strong>
+
+        <span class="time">
+            ${currentTime}
+        </span>
+
+    </div>
+
+    <div>
+        ${data.message}
+    </div>
+
+`;
     messages.appendChild(div);
 
     messages.scrollTop = messages.scrollHeight;
