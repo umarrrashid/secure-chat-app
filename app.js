@@ -98,9 +98,13 @@ app.get("/chat", isLoggedIn, async (req, res) => {
         const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
 
         return {
-            sender: msg.sender,
-            text: decryptedText
-        };
+    sender: msg.sender,
+    text: decryptedText,
+    time: new Date(msg.createdAt).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+    })
+};
     });
 
     res.render("chat", {

@@ -32,9 +32,19 @@
 
             <div class="message <%= msg.sender === user ? 'my-message' : 'other-message' %>">
 
-                <strong><%= msg.sender %>:</strong>
-                <%= msg.text %>
+               <div class="msg-top">
 
+    <strong><%= msg.sender %></strong>
+
+    <span class="time">
+        <%= msg.time %>
+    </span>
+
+</div>
+
+<div>
+    <%= msg.text %>
+</div>
             </div>
 
         <% }) %>
