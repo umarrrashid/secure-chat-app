@@ -21,10 +21,10 @@ async function createUser() {
     await user1.save();
 
     // Second User
-    const hashedPassword2 = await bcrypt.hash("54321", 10);
+    const hashedPassword2 = await bcrypt.hash("00000", 10);
 
     const user2 = new User({
-        username: "saba",
+        username: "user",
         password: hashedPassword2
     });
 
