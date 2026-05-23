@@ -10,305 +10,129 @@
 
     <title>Users</title>
 
-    <style>
-
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            font-family:Arial;
-        }
-
-        body{
-
-            height:100vh;
-
-            display:flex;
-
-            justify-content:center;
-
-            align-items:center;
-
-            background:linear-gradient(
-                135deg,
-                #0f172a,
-                #1e3a5f,
-                #4c3f91
-            );
-
-        }
-
-        .container{
-
-            width:420px;
-
-            padding:30px;
-
-            border-radius:25px;
-
-            background:rgba(255,255,255,0.1);
-
-            backdrop-filter:blur(15px);
-
-            color:white;
-
-            box-shadow:0 8px 30px rgba(0,0,0,0.3);
-
-        }
-
-        h1{
-
-            margin-bottom:10px;
-
-        }
-
-        p{
-
-            color:#ddd;
-
-            margin-bottom:20px;
-
-        }
-
-        .user{
-
-            display:flex;
-
-            justify-content:space-between;
-
-            align-items:center;
-
-            padding:15px;
-
-            border-radius:18px;
-
-            background:rgba(255,255,255,0.08);
-
-            margin-bottom:15px;
-
-        }
-
-        .left{
-
-            display:flex;
-
-            align-items:center;
-
-            gap:12px;
-
-        }
-
-        .avatar{
-
-            width:45px;
-
-            height:45px;
-
-            border-radius:50%;
-
-            background:#6d4aff;
-
-            display:flex;
-
-            justify-content:center;
-
-            align-items:center;
-
-            font-weight:bold;
-
-            font-size:20px;
-
-        }
-
-        .name{
-
-            font-size:20px;
-
-            font-weight:bold;
-
-        }
-
-        .status{
-
-            color:#00ff6a;
-
-            font-size:14px;
-
-        }
-
-        .btn{
-
-            padding:10px 18px;
-
-            border:none;
-
-            border-radius:12px;
-
-            color:white;
-
-            text-decoration:none;
-
-            font-weight:bold;
-
-        }
-
-        .request{
-
-            background:#ff9800;
-
-        }
-
-        .chat{
-
-            background:#3b82f6;
-
-        }
-
-        .pending{
-
-            background:gray;
-
-        }
-
-        .logout{
-
-            display:block;
-
-            text-align:center;
-
-            margin-top:20px;
-
-            padding:15px;
-
-            border-radius:15px;
-
-            background:#ff3131;
-
-            color:white;
-
-            text-decoration:none;
-
-            font-weight:bold;
-
-        }
-
-    </style>
+    <link rel="stylesheet"
+          href="/style.css">
 
 </head>
 
 <body>
 
-<div class="container">
+    <div class="users-container">
 
-    <h1>
+        <h1>
+            Welcome <%= currentUser %>
+        </h1>
 
-        Welcome <%= currentUser %>
+        <p>
+            Select a user to start chatting
+        </p>
 
-    </h1>
+        <% users.forEach(user => { %>
 
-    <p>
+            <div class="user-card">
 
-        Select a user to start chatting
+                <div class="user-left">
 
-    </p>
+                    <div class="avatar">
 
-    <% users.forEach((user) => { %>
+                        <%= user.username.charAt(0).toUpperCase() %>
 
-        <div class="user">
+                    </div>
 
-            <div class="left">
+                    <div>
 
-                <div class="avatar">
+                        <h3>
+                            <%= user.username %>
+                        </h3>
 
-                    <%= user.username.charAt(0).toUpperCase() %>
+                        <span class="online">
+                            ● Online
+                        </span>
+
+                    </div>
 
                 </div>
 
                 <div>
 
-                    <div class="name">
+                    <%
 
-                        <%= user.username %>
+                    let relation = requests.find(r =>
 
-                    </div>
+                        (r.from === currentUser &&
+                         r.to === user.username)
 
-                    <div class="status">
+                        ||
 
-                        ● Online
+                        (r.from === user.username &&
+                         r.to === currentUser)
 
-                    </div>
+                    );
+
+                    %>
+
+                    <% if(!relation){ %>
+
+                        <a href="/request/<%= user.username %>"
+                           class="request-btn">
+
+                            Request
+
+                        </a>
+
+                    <% } else if(relation.status === "pending"){ %>
+
+                        <% if(relation.to === currentUser){ %>
+
+                            <a href="/requests"
+                               class="chat-btn">
+
+                                Approve
+
+                            </a>
+
+                        <% } else { %>
+
+                            <button class="pending-btn">
+
+                                Pending
+
+                            </button>
+
+                        <% } %>
+
+                    <% } else if(relation.status === "accepted"){ %>
+
+                        <a href="/chat/<%= user.username %>"
+                           class="chat-btn">
+
+                            Chat
+
+                        </a>
+
+                    <% } %>
 
                 </div>
 
             </div>
 
-            <div>
+        <% }) %>
 
-                <%
+        <a href="/requests"
+           class="logout-btn">
 
-                let request = requests.find(r =>
+            Requests
 
-                    (r.from === currentUser &&
-                     r.to === user.username)
+        </a>
 
-                    ||
+        <a href="/logout"
+           class="logout-btn">
 
-                    (r.from === user.username &&
-                     r.to === currentUser)
+            Logout
 
-                );
+        </a>
 
-                %>
-
-                <% if(!request){ %>
-
-                    <a
-                       class="btn request"
-                       href="/request/<%= user.username %>">
-
-                       Request
-
-                    </a>
-
-                <% } else if(request.status === "pending"){ %>
-
-                    <button class="btn pending">
-
-                        Pending
-
-                    </button>
-
-                <% } else if(request.status === "accepted"){ %>
-
-                    <a
-                       class="btn chat"
-                       href="/chat/<%= user.username %>">
-
-                       Chat
-
-                    </a>
-
-                <% } %>
-
-            </div>
-
-        </div>
-
-    <% }) %>
-
-    <a class="logout" href="/requests">
-
-        Requests
-
-    </a>
-
-    <a class="logout" href="/logout">
-
-        Logout
-
-    </a>
-
-</div>
+    </div>
 
 </body>
 
