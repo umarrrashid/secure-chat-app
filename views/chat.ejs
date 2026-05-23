@@ -5,7 +5,8 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
 
     <title>US Chat</title>
 
@@ -17,250 +18,50 @@
 
 <body>
 
+<div class="chat-container">
 
+    <div class="chat-header">
 
-    <!-- ================= CHAT CONTAINER ================= -->
+        <h1>
 
-    <div class="chat-container">
+            Chat with <%= friend %>
 
+        </h1>
 
+        <a href="/users">
 
-        <!-- ================= HEADER ================= -->
+            <button class="clear-btn">
 
-        <div class="chat-header">
-
-            <h1>US Chat</h1>
-
-
-
-            <div class="top-buttons">
-
-                <!-- LOGOUT -->
-
-                <a href="/logout">
-
-                    <button class="logout-btn">
-
-                        Logout
-
-                    </button>
-
-                </a>
-
-
-
-                <!-- CLEAR CHAT -->
-
-                <form action="/clear-chat" method="POST">
-
-                    <button class="clear-btn">
-
-                        Clear
-
-                    </button>
-
-                </form>
-
-            </div>
-
-        </div>
-
-
-
-        <!-- ================= CHAT BOX ================= -->
-
-        <div class="chat-box" id="chat-box">
-
-
-
-            <% messages.forEach((msg) => { %>
-
-
-
-                <div class="message 
-                    <%= msg.sender === user 
-                    ? 'my-message' 
-                    : 'other-message' %>">
-
-
-
-                    <!-- TOP PART -->
-
-                    <div class="message-top">
-
-                        <strong>
-
-                            <%= msg.sender %>
-
-                        </strong>
-
-
-
-                        <span class="time">
-
-                            <%= msg.time %>
-
-                        </span>
-
-                    </div>
-
-
-
-                    <!-- MESSAGE TEXT -->
-
-                    <div class="message-text">
-
-                        <%= msg.text %>
-
-                    </div>
-
-                </div>
-
-
-
-            <% }) %>
-
-
-
-        </div>
-
-
-
-        <!-- ================= MESSAGE FORM ================= -->
-
-        <form id="chat-form" class="message-form">
-
-
-
-            <input
-
-                type="text"
-
-                id="message-input"
-
-                placeholder="Type message..."
-
-                autocomplete="off"
-
-                required
-
-            >
-
-
-
-            <button type="submit">
-
-                Send
+                Back
 
             </button>
 
-
-
-        </form>
-
-
+        </a>
 
     </div>
 
 
 
+    <div class="chat-box" id="chat-box">
 
+        <% messages.forEach((msg) => { %>
 
-    <!-- ================= SOCKET.IO SCRIPT ================= -->
-
-    <script>
-
-        const socket = io();
-
-
-
-        const form = document.getElementById("chat-form");
-
-        const input = document.getElementById("message-input");
-
-        const chatBox = document.getElementById("chat-box");
-
-
-
-        const currentUser = "<%= user %>";
-
-
-
-        /* ---------- SEND MESSAGE ---------- */
-
-        form.addEventListener("submit", (e) => {
-
-            e.preventDefault();
-
-
-
-            if (input.value.trim() === "") {
-
-                return;
-
-            }
-
-
-
-            socket.emit("chat message", {
-
-                user: currentUser,
-
-                message: input.value
-
-            });
-
-
-
-            input.value = "";
-
-        });
-
-
-
-
-
-        /* ---------- RECEIVE MESSAGE ---------- */
-
-        socket.on("chat message", (data) => {
-
-
-
-            const div = document.createElement("div");
-
-
-
-            div.classList.add("message");
-
-
-
-            if (data.user === currentUser) {
-
-                div.classList.add("my-message");
-
-            }
-
-            else {
-
-                div.classList.add("other-message");
-
-            }
-
-
-
-            div.innerHTML = `
+            <div class="message
+            <%= msg.sender === user
+            ? 'my-message'
+            : 'other-message' %>">
 
                 <div class="message-top">
 
                     <strong>
 
-                        ${data.user}
+                        <%= msg.sender %>
 
                     </strong>
 
                     <span class="time">
 
-                        ${data.time}
+                        <%= msg.time %>
 
                     </span>
 
@@ -268,27 +69,157 @@
 
                 <div class="message-text">
 
-                    ${data.message}
+                    <%= msg.text %>
 
                 </div>
 
-            `;
+            </div>
+
+        <% }) %>
+
+    </div>
 
 
 
-            chatBox.appendChild(div);
+    <form id="chat-form" class="message-form">
+
+        <input
+            type="text"
+            id="message-input"
+            placeholder="Type message..."
+            autocomplete="off"
+            required
+        >
+
+        <button type="submit">
+
+            Send
+
+        </button>
+
+    </form>
+
+</div>
 
 
 
-            /* AUTO SCROLL */
+<script>
 
-            chatBox.scrollTop = chatBox.scrollHeight;
+    const socket = io();
+
+
+
+    const form = document.getElementById("chat-form");
+
+    const input = document.getElementById("message-input");
+
+    const chatBox = document.getElementById("chat-box");
+
+
+
+    const currentUser = "<%= user %>";
+
+    const ROOM_ID = "<%= room %>";
+
+
+
+    socket.emit("join room", ROOM_ID);
+
+
+
+    form.addEventListener("submit", (e) => {
+
+        e.preventDefault();
+
+
+
+        if(input.value.trim() === ""){
+
+            return;
+
+        }
+
+
+
+        socket.emit("chat message", {
+
+            room: ROOM_ID,
+
+            user: currentUser,
+
+            message: input.value
 
         });
 
-    </script>
 
 
+        input.value = "";
+
+    });
+
+
+
+    socket.on("chat message", (data) => {
+
+        const div = document.createElement("div");
+
+
+
+        div.classList.add("message");
+
+
+
+        if(data.user === currentUser){
+
+            div.classList.add("my-message");
+
+        }
+
+        else{
+
+            div.classList.add("other-message");
+
+        }
+
+
+
+        div.innerHTML = `
+
+            <div class="message-top">
+
+                <strong>
+
+                    ${data.user}
+
+                </strong>
+
+                <span class="time">
+
+                    ${data.time}
+
+                </span>
+
+            </div>
+
+            <div class="message-text">
+
+                ${data.message}
+
+            </div>
+
+        `;
+
+
+
+        chatBox.appendChild(div);
+
+
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+    });
+
+</script>
 
 </body>
 
