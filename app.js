@@ -17,18 +17,15 @@ const io = new Server(server);
 const User = require("./models/User");
 const Message = require("./models/Message");
 
-/* ---------------- DATABASE ---------------- */
 
 mongoose.connect(process.env.MONGO_URL)
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.log(err));
 
-/* ---------------- VIEW ENGINE ---------------- */
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-/* ---------------- MIDDLEWARE ---------------- */
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -50,8 +47,7 @@ app.use(session({
     }
 }));
 
-/* ---------------- AUTH CHECK ---------------- */
-
+//auth check
 function isLoggedIn(req, res, next){
 
     if(req.session.user){
@@ -63,8 +59,7 @@ function isLoggedIn(req, res, next){
 
 }
 
-/* ---------------- ROUTES ---------------- */
-
+//routes
 app.get("/", (req, res) => {
 
     return res.render("login");
@@ -77,8 +72,7 @@ app.get("/login", (req, res) => {
 
 });
 
-/* ---------------- LOGIN ---------------- */
-
+//login
 app.post("/login", async (req, res) => {
 
     const { username, password } = req.body;
@@ -104,8 +98,7 @@ app.post("/login", async (req, res) => {
 
 });
 
-/* ---------------- CHAT PAGE ---------------- */
-
+//chat page
 app.get("/chat", isLoggedIn, async (req, res) => {
 
     const messages = await Message.find();
@@ -138,8 +131,7 @@ app.get("/chat", isLoggedIn, async (req, res) => {
 
 });
 
-/* ---------------- LOGOUT ---------------- */
-
+//logout
 app.get("/logout", (req, res) => {
 
     req.session.destroy(() => {
@@ -150,8 +142,7 @@ app.get("/logout", (req, res) => {
 
 });
 
-/* ---------------- CLEAR CHAT ---------------- */
-
+//clear chat
 app.post("/clear-chat", async (req, res) => {
 
     await Message.deleteMany({});
@@ -160,8 +151,7 @@ app.post("/clear-chat", async (req, res) => {
 
 });
 
-/* ---------------- SOCKET IO ---------------- */
-
+//socket.IO
 io.on("connection", (socket) => {
 
     socket.on("chat message", async (data) => {
@@ -182,8 +172,7 @@ io.on("connection", (socket) => {
 
 });
 
-/* ---------------- ERROR HANDLER ---------------- */
-
+//err handeler
 app.use((err, req, res, next) => {
 
     console.log(err);
@@ -192,7 +181,7 @@ app.use((err, req, res, next) => {
 
 });
 
-/* ---------------- SERVER ---------------- */
+//server
 
 const PORT = process.env.PORT || 3000;
 
