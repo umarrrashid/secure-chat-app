@@ -106,12 +106,41 @@ app.get("/chat", isLoggedIn, async (req, res) => {
 
     const messages = await Message.find();
 
+    const decryptedMessages = messages.map(msg => {
+
+        let decryptedText;
+
+        try {
+
+            const bytes = CryptoJS.AES.decrypt(
+                msg.text,
+                process.env.CHAT_SECRET
+            );
+
+            decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+
+            // if not encrypted
+            if (!decryptedText) {
+                decryptedText = msg.text;
+            }
+
+        } catch (err) {
+            decryptedText = msg.text;
+        }
+
+        return {
+            sender: msg.sender,
+            text: decryptedText,
+            time: new Date(msg.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            })
+        };
+    });
+
     res.render("chat", {
-
         user: req.session.user,
-
-        messages
-
+        messages: decryptedMessages
     });
 
 });
@@ -138,17 +167,26 @@ io.on("connection", (socket) => {
 
     socket.on("chat message", async (data) => {
 
+        const encrypted = CryptoJS.AES.encrypt(
+            data.message,
+            process.env.CHAT_SECRET
+        ).toString();
+
         const newMessage = new Message({
-
             sender: data.user,
-
-            text: data.message
-
+            text: encrypted
         });
 
         await newMessage.save();
 
-        io.emit("chat message", data);
+        io.emit("chat message", {
+            user: data.user,
+            message: data.message,
+            time: new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit"
+            })
+        });
 
     });
 
