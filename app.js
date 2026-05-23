@@ -7,7 +7,6 @@ const path = require("path");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
 const MongoStore = require("connect-mongo").default;
-const CryptoJS = require("crypto-js");
 
 const app = express();
 const server = http.createServer(app);
@@ -19,8 +18,8 @@ const User = require("./models/User");
 const Message = require("./models/Message");
 
 mongoose.connect(process.env.MONGO_URL)
-    .then(() => console.log("MongoDB Connected"))
-    .catch(err => console.log(err));
+.then(() => console.log("MongoDB Connected"))
+.catch(err => console.log(err));
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -29,8 +28,11 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
+
     secret: process.env.SESSION_SECRET,
+
     resave: false,
+
     saveUninitialized: false,
 
     store: MongoStore.create({
@@ -40,34 +42,40 @@ app.use(session({
     cookie: {
         maxAge: 1000 * 60 * 60 * 24
     }
+
 }));
 
-function isLoggedIn(req, res, next) {
+function isLoggedIn(req, res, next){
 
-    if (req.session.user) {
+    if(req.session.user){
         next();
-    } else {
+    }
+    else{
         res.redirect("/");
     }
 }
 
 app.get("/", (req, res) => {
+
     res.render("login");
+
 });
 
 app.get("/login", (req, res) => {
+
     res.render("login");
+
 });
 
 app.post("/login", async (req, res) => {
 
-    try {
+    try{
 
         const { username, password } = req.body;
 
         const user = await User.findOne({ username });
 
-        if (!user) {
+        if(!user){
             return res.send("User not found");
         }
 
@@ -76,128 +84,80 @@ app.post("/login", async (req, res) => {
             user.password
         );
 
-        if (!valid) {
-            return res.send("Wrong password");
+        if(!valid){
+            return res.send("Wrong Password");
         }
 
         req.session.user = username;
 
         res.redirect("/chat");
 
-    } catch (err) {
+    }
+    catch(err){
 
         console.log(err);
+
         res.send("Login Error");
     }
+
 });
 
 app.get("/chat", isLoggedIn, async (req, res) => {
 
-    try {
+    const messages = await Message.find();
 
-        const messages = await Message.find();
+    res.render("chat", {
 
-        const decryptedMessages = messages.map(msg => {
+        user: req.session.user,
 
-            const bytes = CryptoJS.AES.decrypt(
-                msg.text,
-                process.env.CHAT_SECRET
-            );
+        messages
 
-            const decryptedText = bytes.toString(
-                CryptoJS.enc.Utf8
-            );
+    });
 
-            return {
-
-                sender: msg.sender,
-
-                text: decryptedText,
-
-                time: new Date(msg.createdAt)
-                    .toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                    })
-            };
-        });
-
-        res.render("chat", {
-            user: req.session.user,
-            messages: decryptedMessages
-        });
-
-    } catch (err) {
-
-        console.log(err);
-        res.send("Chat Error");
-    }
 });
 
 app.get("/logout", (req, res) => {
 
     req.session.destroy(() => {
+
         res.redirect("/");
+
     });
+
 });
 
-app.post("/clear-chat", async (req, res) => {
+app.get("/clear-chat", async (req, res) => {
 
     await Message.deleteMany({});
 
     res.redirect("/chat");
+
 });
 
 io.on("connection", (socket) => {
 
     socket.on("chat message", async (data) => {
 
-        try {
+        const newMessage = new Message({
 
-            const encrypted =
-                CryptoJS.AES.encrypt(
-                    data.message,
-                    process.env.CHAT_SECRET
-                ).toString();
+            sender: data.user,
 
-            const newMessage = new Message({
+            text: data.message
 
-                sender: data.user,
+        });
 
-                text: encrypted
-            });
+        await newMessage.save();
 
-            await newMessage.save();
+        io.emit("chat message", data);
 
-            io.emit("chat message", {
-
-                user: data.user,
-
-                message: data.message,
-
-                time: new Date().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                })
-            });
-
-        } catch (err) {
-
-            console.log(err);
-        }
     });
+
 });
 
 const PORT = process.env.PORT || 3000;
 
-app.use((err, req, res, next) => {
-
-    console.log(err);
-
-    res.status(500).send(err.message);
-});
-
 server.listen(PORT, () => {
 
     console.log(`Server Running On Port ${PORT}`);
+
 });
