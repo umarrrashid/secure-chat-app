@@ -18,7 +18,7 @@ const io = new Server(server);
 const User = require("./models/User");
 const Message = require("./models/Message");
 
-mongoose.connect("mongodb://127.0.0.1:27017/securechat")
+mongoose.connect(process.env.MONGO_URL)
 .then(() => console.log("MongoDB Connected"))
 .catch(err => console.log(err));
 
@@ -33,7 +33,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-        mongoUrl: "mongodb://127.0.0.1:27017/securechat"
+mongoUrl: process.env.MONGO_URL
     }),
     cookie: {
         maxAge: 1000 * 60 * 60 * 24
