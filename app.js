@@ -28,11 +28,8 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 
 app.use(session({
-
     secret: process.env.SESSION_SECRET,
-
     resave: false,
-
     saveUninitialized: false,
 
     store: MongoStore.create({
@@ -42,15 +39,13 @@ app.use(session({
     cookie: {
         maxAge: 1000 * 60 * 60 * 24
     }
-
 }));
 
 function isLoggedIn(req, res, next){
 
     if(req.session.user){
         next();
-    }
-    else{
+    } else {
         res.redirect("/");
     }
 }
@@ -69,36 +64,26 @@ app.get("/login", (req, res) => {
 
 app.post("/login", async (req, res) => {
 
-    try{
+    const { username, password } = req.body;
 
-        const { username, password } = req.body;
+    const user = await User.findOne({ username });
 
-        const user = await User.findOne({ username });
-
-        if(!user){
-            return res.send("User not found");
-        }
-
-        const valid = await bcrypt.compare(
-            password,
-            user.password
-        );
-
-        if(!valid){
-            return res.send("Wrong Password");
-        }
-
-        req.session.user = username;
-
-        res.redirect("/chat");
-
+    if(!user){
+        return res.send("User not found");
     }
-    catch(err){
 
-        console.log(err);
+    const valid = await bcrypt.compare(
+        password,
+        user.password
+    );
 
-        res.send("Login Error");
+    if(!valid){
+        return res.send("Wrong password");
     }
+
+    req.session.user = username;
+
+    res.redirect("/chat");
 
 });
 
@@ -106,41 +91,23 @@ app.get("/chat", isLoggedIn, async (req, res) => {
 
     const messages = await Message.find();
 
-    const decryptedMessages = messages.map(msg => {
-
-        let decryptedText;
-
-        try {
-
-            const bytes = CryptoJS.AES.decrypt(
-                msg.text,
-                process.env.CHAT_SECRET
-            );
-
-            decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-
-            // if not encrypted
-            if (!decryptedText) {
-                decryptedText = msg.text;
-            }
-
-        } catch (err) {
-            decryptedText = msg.text;
-        }
+    const allMessages = messages.map(msg => {
 
         return {
             sender: msg.sender,
-            text: decryptedText,
+            text: msg.text,
+
             time: new Date(msg.createdAt).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit"
             })
         };
+
     });
 
     res.render("chat", {
         user: req.session.user,
-        messages: decryptedMessages
+        messages: allMessages
     });
 
 });
@@ -155,7 +122,7 @@ app.get("/logout", (req, res) => {
 
 });
 
-app.get("/clear-chat", async (req, res) => {
+app.post("/clear-chat", async (req, res) => {
 
     await Message.deleteMany({});
 
@@ -163,18 +130,21 @@ app.get("/clear-chat", async (req, res) => {
 
 });
 
+app.get("/reset", async (req, res) => {
+
+    await Message.deleteMany({});
+
+    res.send("All chat deleted");
+
+});
+
 io.on("connection", (socket) => {
 
     socket.on("chat message", async (data) => {
 
-        const encrypted = CryptoJS.AES.encrypt(
-            data.message,
-            process.env.CHAT_SECRET
-        ).toString();
-
         const newMessage = new Message({
             sender: data.user,
-            text: encrypted
+            text: data.message
         });
 
         await newMessage.save();
@@ -182,6 +152,7 @@ io.on("connection", (socket) => {
         io.emit("chat message", {
             user: data.user,
             message: data.message,
+
             time: new Date().toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit"
@@ -193,6 +164,14 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+app.use((err, req, res, next) => {
+
+    console.log(err);
+
+    res.status(500).send(err.message);
+
+});
 
 server.listen(PORT, () => {
 

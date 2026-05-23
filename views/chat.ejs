@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
     <meta charset="UTF-8">
 
-    <meta name="viewport"
-    content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>US Chat</title>
 
@@ -13,174 +13,283 @@
 
     <script src="/socket.io/socket.io.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-
 </head>
 
 <body>
 
-<div class="chat-container">
 
-    <div class="top-bar">
 
-        <h1>US Chat</h1>
+    <!-- ================= CHAT CONTAINER ================= -->
 
-        <div class="buttons">
+    <div class="chat-container">
 
-            <a href="/logout">
-                <button class="logout-btn">
-                    Logout
-                </button>
-            </a>
 
-            <a href="/clear-chat">
-                <button class="clear-btn">
-                    Clear
-                </button>
-            </a>
+
+        <!-- ================= HEADER ================= -->
+
+        <div class="chat-header">
+
+            <h1>US Chat</h1>
+
+
+
+            <div class="top-buttons">
+
+                <!-- LOGOUT -->
+
+                <a href="/logout">
+
+                    <button class="logout-btn">
+
+                        Logout
+
+                    </button>
+
+                </a>
+
+
+
+                <!-- CLEAR CHAT -->
+
+                <form action="/clear-chat" method="POST">
+
+                    <button class="clear-btn">
+
+                        Clear
+
+                    </button>
+
+                </form>
+
+            </div>
 
         </div>
 
-    </div>
 
-    <div class="chat-box" id="chat-box">
 
-        <% messages.forEach(msg => { %>
+        <!-- ================= CHAT BOX ================= -->
 
-            <script>
+        <div class="chat-box" id="chat-box">
 
-                const bytes = CryptoJS.AES.decrypt(
-                    "<%= msg.text %>",
-                    "mysecretkey"
-                );
 
-                const decrypted =
-                bytes.toString(CryptoJS.enc.Utf8);
 
-                document.write(`
+            <% messages.forEach((msg) => { %>
 
-                    <div class="
-                    message
-                    <%= msg.sender === user ?
-                    'my-message' :
-                    'other-message' %>
-                    ">
 
-                        <b><%= msg.sender %></b>
 
-                        <p>${decrypted}</p>
+                <div class="message 
+                    <%= msg.sender === user 
+                    ? 'my-message' 
+                    : 'other-message' %>">
+
+
+
+                    <!-- TOP PART -->
+
+                    <div class="message-top">
+
+                        <strong>
+
+                            <%= msg.sender %>
+
+                        </strong>
+
+
+
+                        <span class="time">
+
+                            <%= msg.time %>
+
+                        </span>
 
                     </div>
 
-                `);
 
-            </script>
 
-        <% }) %>
+                    <!-- MESSAGE TEXT -->
+
+                    <div class="message-text">
+
+                        <%= msg.text %>
+
+                    </div>
+
+                </div>
+
+
+
+            <% }) %>
+
+
+
+        </div>
+
+
+
+        <!-- ================= MESSAGE FORM ================= -->
+
+        <form id="chat-form" class="message-form">
+
+
+
+            <input
+
+                type="text"
+
+                id="message-input"
+
+                placeholder="Type message..."
+
+                autocomplete="off"
+
+                required
+
+            >
+
+
+
+            <button type="submit">
+
+                Send
+
+            </button>
+
+
+
+        </form>
+
+
 
     </div>
 
-    <form id="chat-form">
 
-        <input
-            type="text"
-            id="message-input"
-            placeholder="Type message..."
-            autocomplete="off"
-        >
 
-        <button type="submit">
-            Send
-        </button>
 
-    </form>
 
-</div>
+    <!-- ================= SOCKET.IO SCRIPT ================= -->
 
-<script>
+    <script>
 
-const socket = io();
+        const socket = io();
 
-const form = document.getElementById("chat-form");
 
-const input = document.getElementById("message-input");
 
-const chatBox = document.getElementById("chat-box");
+        const form = document.getElementById("chat-form");
 
-const USER = "<%= user %>";
+        const input = document.getElementById("message-input");
 
-const SECRET = "mysecretkey";
+        const chatBox = document.getElementById("chat-box");
 
-form.addEventListener("submit", (e) => {
 
-    e.preventDefault();
 
-    if(input.value.trim() === ""){
-        return;
-    }
+        const currentUser = "<%= user %>";
 
-    const encrypted = CryptoJS.AES.encrypt(
-        input.value,
-        SECRET
-    ).toString();
 
-    socket.emit("chat message", {
 
-        user: USER,
+        /* ---------- SEND MESSAGE ---------- */
 
-        message: encrypted
+        form.addEventListener("submit", (e) => {
 
-    });
+            e.preventDefault();
 
-    input.value = "";
 
-});
 
-socket.on("chat message", (data) => {
+            if (input.value.trim() === "") {
 
-    const bytes = CryptoJS.AES.decrypt(
-        data.message,
-        SECRET
-    );
+                return;
 
-    const decrypted =
-    bytes.toString(CryptoJS.enc.Utf8);
+            }
 
-    const div = document.createElement("div");
 
-    if(data.user === USER){
 
-        div.classList.add(
-            "message",
-            "my-message"
-        );
+            socket.emit("chat message", {
 
-    }
-    else{
+                user: currentUser,
 
-        div.classList.add(
-            "message",
-            "other-message"
-        );
+                message: input.value
 
-    }
+            });
 
-    div.innerHTML = `
 
-        <b>${data.user}</b>
 
-        <p>${decrypted}</p>
+            input.value = "";
 
-    `;
+        });
 
-    chatBox.appendChild(div);
 
-    chatBox.scrollTop =
-    chatBox.scrollHeight;
 
-});
 
-</script>
+
+        /* ---------- RECEIVE MESSAGE ---------- */
+
+        socket.on("chat message", (data) => {
+
+
+
+            const div = document.createElement("div");
+
+
+
+            div.classList.add("message");
+
+
+
+            if (data.user === currentUser) {
+
+                div.classList.add("my-message");
+
+            }
+
+            else {
+
+                div.classList.add("other-message");
+
+            }
+
+
+
+            div.innerHTML = `
+
+                <div class="message-top">
+
+                    <strong>
+
+                        ${data.user}
+
+                    </strong>
+
+                    <span class="time">
+
+                        ${data.time}
+
+                    </span>
+
+                </div>
+
+                <div class="message-text">
+
+                    ${data.message}
+
+                </div>
+
+            `;
+
+
+
+            chatBox.appendChild(div);
+
+
+
+            /* AUTO SCROLL */
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+        });
+
+    </script>
+
+
 
 </body>
+
 </html>
