@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure Chat</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div class="chat-container">
+
+    <div class="chat-header">
+        <h2>Welcome <%= user %></h2>
+    </div>
+    <ul id="messages">
+
+        <% messages.forEach(msg => { %>
+
+            <li>
+                <strong><%= msg.sender %>:</strong>
+                <%= msg.text %>
+            </li>
+
+        <% }) %>
+
+    </ul>
+
+    <form id="form">
+
+        <input
+            id="input"
+            autocomplete="off"
+            placeholder="Type message..."
+        >
+
+        <button>Send</button>
+
+    </form>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+const socket = io();
+
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const messages = document.getElementById("messages");
+
+form.addEventListener("submit", (e) => {
+
+    e.preventDefault();
+
+    if(input.value){
+
+        socket.emit("chat message", {
+            user: "<%= user %>",
+            message: input.value
+        });
+
+        input.value = "";
+    }
+});
+
+socket.on("chat message", (data) => {
+
+    const li = document.createElement("li");
+
+    li.innerHTML =
+        "<strong>" +
+        data.user +
+        ":</strong> " +
+        data.message;
+
+    messages.appendChild(li);
+});
+</script>
+
+</body>
+</html>
