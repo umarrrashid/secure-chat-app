@@ -9,7 +9,23 @@
 <div class="chat-container">
 
     <div class="chat-header">
-        <h2>Welcome <%= user %></h2>
+        <div class="top-bar">
+
+    <h2>Welcome <%= user %></h2>
+
+    <div>
+
+        <form action="/clear-chat" method="POST" style="display:inline;">
+            <button class="clear-btn">Clear Chat</button>
+        </form>
+
+        <a href="/logout">
+            <button class="logout-btn">Logout</button>
+        </a>
+
+    </div>
+
+</div>
     </div>
     <ul id="messages">
 

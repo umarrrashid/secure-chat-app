@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const http = require("http");
+
 const mongoose = require("mongoose");
 const path = require("path");
 const bcrypt = require("bcrypt");
@@ -106,6 +107,22 @@ app.get("/chat", isLoggedIn, async (req, res) => {
         user: req.session.user,
         messages: decryptedMessages
     });
+});
+
+app.get("/logout", (req, res) => {
+
+    req.session.destroy(() => {
+        res.redirect("/");
+    });
+
+});
+
+app.post("/clear-chat", async (req, res) => {
+
+    await Message.deleteMany({});
+
+    res.redirect("/chat");
+
 });
 
 io.on("connection", (socket) => {
