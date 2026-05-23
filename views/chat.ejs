@@ -6,44 +6,45 @@
 </head>
 <body>
 
-<div class="chat-container">
+<div class="container">
 
-    <div class="chat-header">
-        <div class="top-bar">
+    <div class="top-bar">
 
-    <h2>Welcome <%= user %></h2>
+        <h2>Secure Chat</h2>
 
-    <div>
+        <div>
 
-        <form action="/clear-chat" method="POST" style="display:inline;">
-            <button class="clear-btn">Clear Chat</button>
-        </form>
+            <a href="/logout">
+                <button class="logout-btn">Logout</button>
+            </a>
 
-        <a href="/logout">
-            <button class="logout-btn">Logout</button>
-        </a>
+            <a href="/clear">
+                <button class="clear-btn">Clear</button>
+            </a>
+
+        </div>
 
     </div>
 
-</div>
-    </div>
-    <ul id="messages">
+    <div class="chat-box" id="messages">
 
         <% messages.forEach(msg => { %>
 
-            <li>
+            <div class="message <%= msg.sender === user ? 'my-message' : 'other-message' %>">
+
                 <strong><%= msg.sender %>:</strong>
                 <%= msg.text %>
-            </li>
+
+            </div>
 
         <% }) %>
 
-    </ul>
+    </div>
 
-    <form id="form">
+    <form id="chat-form">
 
         <input
-            id="input"
+            id="msg"
             autocomplete="off"
             placeholder="Type message..."
         >
@@ -60,18 +61,22 @@
 
 const socket = io();
 
-const form = document.getElementById("form");
-const input = document.getElementById("input");
+const form = document.getElementById("chat-form");
+
+const input = document.getElementById("msg");
+
 const messages = document.getElementById("messages");
 
-form.addEventListener("submit", (e) => {
+const username = "<%= user %>";
+
+form.addEventListener("submit", function(e){
 
     e.preventDefault();
 
     if(input.value){
 
         socket.emit("chat message", {
-            user: "<%= user %>",
+            user: username,
             message: input.value
         });
 
@@ -79,18 +84,27 @@ form.addEventListener("submit", (e) => {
     }
 });
 
-socket.on("chat message", (data) => {
+socket.on("chat message", function(data){
 
-    const li = document.createElement("li");
+    const div = document.createElement("div");
 
-    li.innerHTML =
-        "<strong>" +
-        data.user +
-        ":</strong> " +
-        data.message;
+    div.classList.add("message");
 
-    messages.appendChild(li);
+    if(data.user === username){
+        div.classList.add("my-message");
+    } else {
+        div.classList.add("other-message");
+    }
+
+    div.innerHTML = `
+        <strong>${data.user}:</strong> ${data.message}
+    `;
+
+    messages.appendChild(div);
+
+    messages.scrollTop = messages.scrollHeight;
 });
+
 </script>
 
 </body>
