@@ -27,9 +27,13 @@
             Select a user to start chatting
         </p>
 
+
+
         <% users.forEach(user => { %>
 
             <div class="user-card">
+
+                <!-- LEFT SIDE -->
 
                 <div class="user-left">
 
@@ -53,36 +57,71 @@
 
                 </div>
 
+
+
+                <!-- RIGHT SIDE -->
+
                 <div>
 
                     <%
 
                     let relation = requests.find(r =>
 
-                        (r.from === currentUser &&
-                         r.to === user.username)
+                        (
+
+                            r.sender === currentUser &&
+
+                            r.receiver === user.username
+
+                        )
 
                         ||
 
-                        (r.from === user.username &&
-                         r.to === currentUser)
+                        (
+
+                            r.sender === user.username &&
+
+                            r.receiver === currentUser
+
+                        )
 
                     );
 
                     %>
 
+
+
+                    <!-- NO REQUEST -->
+
                     <% if(!relation){ %>
 
-                        <a href="/request/<%= user.username %>"
-                           class="request-btn">
+                        <form
+                            action="/request/<%= user.username %>"
+                            method="POST"
+                        >
 
-                            Request
+                            <button
+                                type="submit"
+                                class="request-btn"
+                            >
 
-                        </a>
+                                Request
+
+                            </button>
+
+                        </form>
+
+
+
+                    <!-- PENDING -->
 
                     <% } else if(relation.status === "pending"){ %>
 
-                        <% if(relation.to === currentUser){ %>
+
+
+                        <!-- RECEIVED REQUEST -->
+
+                        <% if(relation.receiver === currentUser){ %>
 
                             <a href="/requests"
                                class="chat-btn">
@@ -101,6 +140,10 @@
 
                         <% } %>
 
+
+
+                    <!-- ACCEPTED -->
+
                     <% } else if(relation.status === "accepted"){ %>
 
                         <a href="/chat/<%= user.username %>"
@@ -118,29 +161,35 @@
 
         <% }) %>
 
+
+
+        <!-- BOTTOM BUTTONS -->
+
         <div class="bottom-buttons">
 
-    <a href="/requests">
+            <a href="/requests">
 
-        <button class="requests-btn">
+                <button class="requests-btn">
 
-            Requests
+                    Requests
 
-        </button>
+                </button>
 
-    </a>
+            </a>
 
-    <a href="/logout">
 
-        <button class="logout-btn">
 
-            Logout
+            <a href="/logout">
 
-        </button>
+                <button class="logout-btn">
 
-    </a>
+                    Logout
 
-</div>
+                </button>
+
+            </a>
+
+        </div>
 
     </div>
 

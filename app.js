@@ -230,8 +230,6 @@ app.post("/admin-login", async (req, res) => {
 
         }
 
-        // ONLY UMAR IS ADMIN
-
         if(admin.username !== "umar"){
 
             return res.send("Access Denied");
@@ -342,8 +340,6 @@ app.post("/register", async (req, res) => {
 
         let approvedStatus = false;
 
-        // UMAR AUTO APPROVED
-
         if(username === "umar"){
 
             approvedStatus = true;
@@ -416,7 +412,7 @@ app.get("/admin",
 
 // ================= APPROVE USER =================
 
-app.get("/approve/:username",
+app.get("/approve-user/:username",
 
     isLoggedIn,
 
@@ -488,9 +484,17 @@ app.get("/delete-user/:username",
 
             $or: [
 
-                { from: req.params.username },
+                {
 
-                { to: req.params.username }
+                    sender: req.params.username
+
+                },
+
+                {
+
+                    receiver: req.params.username
+
+                }
 
             ]
 
@@ -498,11 +502,7 @@ app.get("/delete-user/:username",
 
         await Message.deleteMany({
 
-            $or: [
-
-                { sender: req.params.username }
-
-            ]
+            sender: req.params.username
 
         });
 
@@ -550,9 +550,17 @@ app.get("/users",
 
             $or: [
 
-                { from: currentUser },
+                {
 
-                { to: currentUser }
+                    sender: currentUser
+
+                },
+
+                {
+
+                    receiver: currentUser
+
+                }
 
             ]
 
@@ -584,7 +592,7 @@ app.get("/users",
 
 // ================= SEND REQUEST =================
 
-app.get("/request/:username",
+app.post("/request/:username",
 
     isLoggedIn,
 
@@ -592,45 +600,85 @@ app.get("/request/:username",
 
     try{
 
-        const existing = await Request.findOne({
+        const sender = req.session.user;
 
-            $or: [
+        const receiver = req.params.username;
 
-                {
 
-                    from: req.session.user,
 
-                    to: req.params.username
-
-                },
-
-                {
-
-                    from: req.params.username,
-
-                    to: req.session.user
-
-                }
-
-            ]
-
-        });
-
-        if(existing){
+        if(sender === receiver){
 
             return res.redirect("/users");
 
         }
 
+
+const existingRequest =
+await Request.findOne({
+
+    $or:[
+
+        {
+
+            sender,
+            receiver,
+
+            status: {
+
+                $in: [
+
+                    "pending",
+                    "accepted"
+
+                ]
+
+            }
+
+        },
+
+        {
+
+            sender: receiver,
+
+            receiver: sender,
+
+            status: {
+
+                $in: [
+
+                    "pending",
+                    "accepted"
+
+                ]
+
+            }
+
+        }
+
+    ]
+
+});
+
+
+        if(existingRequest){
+
+            return res.redirect("/users");
+
+        }
+
+
+
         await Request.create({
 
-            from: req.session.user,
+            sender,
 
-            to: req.params.username,
+            receiver,
 
             status: "pending"
 
         });
+
+
 
         res.redirect("/users");
 
@@ -656,68 +704,129 @@ app.get("/requests",
 
     async (req, res) => {
 
-    const requests = await Request.find({
+    try{
 
-        to: req.session.user,
+        const requests = await Request.find({
 
-        status: "pending"
+            receiver: req.session.user,
 
-    });
+            status: "pending"
 
-    res.render("requests", {
+        });
 
-        requests
+        res.render("requests", {
 
-    });
+            requests
+
+        });
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+        res.send("Request Page Error");
+
+    }
 
 });
 
 
 
-// ================= ACCEPT REQUEST =================
+// ================= APPROVE REQUEST =================
 
-app.get("/accept/:id",
+app.post("/approve/:username",
 
     isLoggedIn,
 
     async (req, res) => {
 
-    await Request.findByIdAndUpdate(
+    try{
 
-        req.params.id,
+        await Request.findOneAndUpdate(
 
-        {
+            {
 
-            status: "accepted"
+                sender: req.params.username,
 
-        }
+                receiver: req.session.user
 
-    );
+            },
 
-    res.redirect("/requests");
+            {
+
+                status: "accepted"
+
+            }
+
+        );
+
+        res.redirect("/requests");
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+        res.send("Approve Error");
+
+    }
 
 });
 
 
 
-// ================= DECLINE REQUEST =================
+// ================= DELETE REQUEST =================
 
-app.get("/decline/:id",
+app.post(
+
+    "/delete-request/:username",
 
     isLoggedIn,
 
     async (req, res) => {
 
-    await Request.findByIdAndDelete(
+    try{
 
-        req.params.id
+        await Request.deleteMany({
 
-    );
+            $or:[
 
-    res.redirect("/requests");
+                {
+
+                    sender: req.params.username,
+
+                    receiver: req.session.user
+
+                },
+
+                {
+
+                    sender: req.session.user,
+
+                    receiver: req.params.username
+
+                }
+
+            ]
+
+        });
+
+        res.redirect("/requests");
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+        res.send("Delete Error");
+
+    }
 
 });
-
 
 
 // ================= CHAT PAGE =================
@@ -736,13 +845,13 @@ app.get("/chat/:username",
 
         const allowed = await Request.findOne({
 
-            $or: [
+            $or:[
 
                 {
 
-                    from: currentUser,
+                    sender: currentUser,
 
-                    to: otherUser,
+                    receiver: otherUser,
 
                     status: "accepted"
 
@@ -750,9 +859,9 @@ app.get("/chat/:username",
 
                 {
 
-                    from: otherUser,
+                    sender: otherUser,
 
-                    to: currentUser,
+                    receiver: currentUser,
 
                     status: "accepted"
 
@@ -762,13 +871,19 @@ app.get("/chat/:username",
 
         });
 
+
+
         if(!allowed){
 
             return res.send(
+
                 "You are not allowed to chat"
+
             );
 
         }
+
+
 
         const room = [
 
@@ -788,17 +903,20 @@ app.get("/chat/:username",
 
             room
 
-        }).sort({
+        })
 
-            createdAt: 1
+        .sort({
+
+            createdAt:1
 
         });
 
 
 
-        const formattedMessages = messages.map((msg) => {
+        const formattedMessages =
+        messages.map((msg)=>{
 
-            return {
+            return{
 
                 sender: msg.sender,
 
@@ -810,17 +928,19 @@ app.get("/chat/:username",
 
                     msg.createdAt
 
-                ).toLocaleTimeString(
+                )
+
+                .toLocaleTimeString(
 
                     "en-IN",
 
                     {
 
-                        timeZone: "Asia/Kolkata",
+                        timeZone:"Asia/Kolkata",
 
-                        hour: "2-digit",
+                        hour:"2-digit",
 
-                        minute: "2-digit"
+                        minute:"2-digit"
 
                     }
 
@@ -1064,7 +1184,9 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
 
     console.log(
+
         `Server Running On Port ${PORT}`
+
     );
 
 });

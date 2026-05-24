@@ -2,9 +2,9 @@ const mongoose = require("mongoose");
 
 const requestSchema = new mongoose.Schema({
 
-    from: String,
+    sender: String,
 
-    to: String,
+    receiver: String,
 
     status: {
 
