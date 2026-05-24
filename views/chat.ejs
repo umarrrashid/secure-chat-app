@@ -1,19 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-    content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>US Chat</title>
 
-    <link rel="stylesheet" href="/style.css">
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial, Helvetica, sans-serif;
+        }
 
-    <script src="/socket.io/socket.io.js"></script>
+        body{
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background: linear-gradient(135deg,#071b3a,#4b3b8f);
+        }
 
+        .chat-container{
+            width:850px;
+            height:700px;
+            background:white;
+            border-radius:25px;
+            overflow:hidden;
+            box-shadow:0 20px 50px rgba(0,0,0,0.4);
+            display:flex;
+            flex-direction:column;
+        }
+
+        .chat-header{
+            background:#00153d;
+            color:white;
+            padding:30px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+
+        .chat-header h1{
+            font-size:55px;
+        }
+
+        .back-btn{
+            text-decoration:none;
+            background:#3461ff;
+            color:white;
+            padding:14px 28px;
+            border-radius:15px;
+            font-weight:bold;
+        }
+
+        .messages{
+            flex:1;
+            background:#ececec;
+            padding:25px;
+            overflow-y:auto;
+            display:flex;
+            flex-direction:column;
+            gap:18px;
+        }
+
+        .my-message{
+            align-self:flex-end;
+            background:linear-gradient(135deg,#6a5cff,#4f46e5);
+            color:white;
+            padding:16px;
+            border-radius:18px 18px 5px 18px;
+            max-width:320px;
+        }
+
+        .other-message{
+            align-self:flex-start;
+            background:#dbe7f7;
+            color:black;
+            padding:16px;
+            border-radius:18px 18px 18px 5px;
+            max-width:320px;
+        }
+
+        .msg-top{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin-bottom:8px;
+        }
+
+        .username{
+            font-weight:bold;
+            font-size:28px;
+        }
+
+        .time{
+            font-size:14px;
+            opacity:0.8;
+        }
+
+        .text{
+            font-size:24px;
+            word-wrap:break-word;
+        }
+
+        .chat-form{
+            display:flex;
+            padding:18px;
+            background:white;
+            gap:15px;
+        }
+
+        .chat-form input{
+            flex:1;
+            padding:18px;
+            border-radius:18px;
+            border:2px solid #6a5cff;
+            font-size:22px;
+            outline:none;
+        }
+
+        .chat-form button{
+            padding:18px 35px;
+            border:none;
+            border-radius:18px;
+            background:#3461ff;
+            color:white;
+            font-size:22px;
+            font-weight:bold;
+            cursor:pointer;
+        }
+
+        .chat-form button:hover{
+            background:#2347d8;
+        }
+    </style>
 </head>
 
 <body>
@@ -21,205 +142,89 @@
 <div class="chat-container">
 
     <div class="chat-header">
+        <h1>Chat with <%= friend %></h1>
 
-        <h1>
-Chat with <%= chattingWith %>
-
-        </h1>
-
-        <a href="/users">
-
-            <button class="clear-btn">
-
-                Back
-
-            </button>
-
+        <a href="/users" class="back-btn">
+            Back
         </a>
-
     </div>
 
+    <div class="messages">
 
+        <% messages.forEach(msg => { %>
 
-    <div class="chat-box" id="chat-box">
+            <% if(msg.sender === currentUser){ %>
 
-        <% messages.forEach((msg) => { %>
+                <div class="my-message">
 
-            <div class="message
-            <%= msg.sender === user
-            ? 'my-message'
-            : 'other-message' %>">
+                    <div class="msg-top">
+                        <div class="username">
+                            <%= msg.sender %>
+                        </div>
 
-                <div class="message-top">
+                        <div class="time">
+                            <%= new Date(msg.createdAt).toLocaleTimeString("en-IN", {
+                                timeZone: "Asia/Kolkata",
+                                hour: "2-digit",
+                                minute: "2-digit"
+                            }) %>
+                        </div>
+                    </div>
 
-                    <strong>
-
-                        <%= msg.sender %>
-
-                    </strong>
-
-                    <span class="time">
-
-                        <%= msg.time %>
-
-                    </span>
-
-                </div>
-
-                <div class="message-text">
-
-                    <%= msg.text %>
+                    <div class="text">
+                        <%= msg.text %>
+                    </div>
 
                 </div>
 
-            </div>
+            <% } else { %>
+
+                <div class="other-message">
+
+                    <div class="msg-top">
+                        <div class="username">
+                            <%= msg.sender %>
+                        </div>
+
+                        <div class="time">
+                            <%= new Date(msg.createdAt).toLocaleTimeString("en-IN", {
+                                timeZone: "Asia/Kolkata",
+                                hour: "2-digit",
+                                minute: "2-digit"
+                            }) %>
+                        </div>
+                    </div>
+
+                    <div class="text">
+                        <%= msg.text %>
+                    </div>
+
+                </div>
+
+            <% } %>
 
         <% }) %>
 
     </div>
 
+    <form class="chat-form" action="/send-message" method="POST">
 
+        <input type="hidden" name="receiver" value="<%= friend %>">
 
-    <form id="chat-form" class="message-form">
-
-        <input
-            type="text"
-            id="message-input"
+        <input 
+            type="text" 
+            name="message" 
             placeholder="Type message..."
-            autocomplete="off"
             required
         >
 
         <button type="submit">
-
             Send
-
         </button>
 
     </form>
 
 </div>
 
-
-
-<script>
-
-    const socket = io();
-
-
-
-    const form = document.getElementById("chat-form");
-
-    const input = document.getElementById("message-input");
-
-    const chatBox = document.getElementById("chat-box");
-
-
-
-    const currentUser = "<%= user %>";
-
-    const ROOM_ID = "<%= room %>";
-
-
-
-    socket.emit("join room", ROOM_ID);
-
-
-
-    form.addEventListener("submit", (e) => {
-
-        e.preventDefault();
-
-
-
-        if(input.value.trim() === ""){
-
-            return;
-
-        }
-
-
-
-        socket.emit("chat message", {
-
-            room: ROOM_ID,
-
-            user: currentUser,
-
-            message: input.value
-
-        });
-
-
-
-        input.value = "";
-
-    });
-
-
-
-    socket.on("chat message", (data) => {
-
-        const div = document.createElement("div");
-
-
-
-        div.classList.add("message");
-
-
-
-        if(data.user === currentUser){
-
-            div.classList.add("my-message");
-
-        }
-
-        else{
-
-            div.classList.add("other-message");
-
-        }
-
-
-
-        div.innerHTML = `
-
-            <div class="message-top">
-
-                <strong>
-
-                    ${data.user}
-
-                </strong>
-
-                <span class="time">
-
-                    ${data.time}
-
-                </span>
-
-            </div>
-
-            <div class="message-text">
-
-                ${data.message}
-
-            </div>
-
-        `;
-
-
-
-        chatBox.appendChild(div);
-
-
-
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-    });
-
-</script>
-
 </body>
-
 </html>
