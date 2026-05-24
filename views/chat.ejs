@@ -75,31 +75,44 @@
 
                 <!-- FILES -->
 
-                <% if(msg.file){ %>
+<% if(msg.file){ %>
 
-                    <% if(msg.file.match(/\.(jpg|jpeg|png|gif|webp)$/i)){ %>
+    <% if(
+        msg.file.endsWith(".png") ||
+        msg.file.endsWith(".jpg") ||
+        msg.file.endsWith(".jpeg") ||
+        msg.file.endsWith(".gif") ||
+        msg.file.endsWith(".webp")
+    ){ %>
 
-                        <img
-                            src="<%= msg.file %>"
-                            class="chat-image"
-                        >
+        <a
+            href="<%= msg.file %>"
+            target="_blank"
+        >
 
-                    <% } else { %>
+            <img
+                src="<%= msg.file %>"
+                class="chat-image"
+            >
 
-                        <a
-                            href="<%= msg.file %>"
-                            target="_blank"
-                            class="file-link"
-                        >
+        </a>
 
-                            📎 <%= msg.file.split('/').pop() %>
+    <% } else { %>
 
-                        </a>
+        <a
+            href="<%= msg.file %>"
+            target="_blank"
+            class="file-link"
+        >
 
-                    <% } %>
+            📎
+            <%= msg.file.split('/').pop() %>
 
-                <% } %>
+        </a>
 
+    <% } %>
+
+<% } %>
 
 
                 <!-- TEXT -->
