@@ -1,230 +1,373 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>US Chat</title>
 
-    <style>
-        *{
-            margin:0;
-            padding:0;
-            box-sizing:border-box;
-            font-family:Arial, Helvetica, sans-serif;
-        }
+    <link rel="stylesheet" href="/style.css">
 
-        body{
-            height:100vh;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            background: linear-gradient(135deg,#071b3a,#4b3b8f);
-        }
+    <script src="/socket.io/socket.io.js"></script>
 
-        .chat-container{
-            width:850px;
-            height:700px;
-            background:white;
-            border-radius:25px;
-            overflow:hidden;
-            box-shadow:0 20px 50px rgba(0,0,0,0.4);
-            display:flex;
-            flex-direction:column;
-        }
-
-        .chat-header{
-            background:#00153d;
-            color:white;
-            padding:30px;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-        }
-
-        .chat-header h1{
-            font-size:55px;
-        }
-
-        .back-btn{
-            text-decoration:none;
-            background:#3461ff;
-            color:white;
-            padding:14px 28px;
-            border-radius:15px;
-            font-weight:bold;
-        }
-
-        .messages{
-            flex:1;
-            background:#ececec;
-            padding:25px;
-            overflow-y:auto;
-            display:flex;
-            flex-direction:column;
-            gap:18px;
-        }
-
-        .my-message{
-            align-self:flex-end;
-            background:linear-gradient(135deg,#6a5cff,#4f46e5);
-            color:white;
-            padding:16px;
-            border-radius:18px 18px 5px 18px;
-            max-width:320px;
-        }
-
-        .other-message{
-            align-self:flex-start;
-            background:#dbe7f7;
-            color:black;
-            padding:16px;
-            border-radius:18px 18px 18px 5px;
-            max-width:320px;
-        }
-
-        .msg-top{
-            display:flex;
-            align-items:center;
-            gap:10px;
-            margin-bottom:8px;
-        }
-
-        .username{
-            font-weight:bold;
-            font-size:28px;
-        }
-
-        .time{
-            font-size:14px;
-            opacity:0.8;
-        }
-
-        .text{
-            font-size:24px;
-            word-wrap:break-word;
-        }
-
-        .chat-form{
-            display:flex;
-            padding:18px;
-            background:white;
-            gap:15px;
-        }
-
-        .chat-form input{
-            flex:1;
-            padding:18px;
-            border-radius:18px;
-            border:2px solid #6a5cff;
-            font-size:22px;
-            outline:none;
-        }
-
-        .chat-form button{
-            padding:18px 35px;
-            border:none;
-            border-radius:18px;
-            background:#3461ff;
-            color:white;
-            font-size:22px;
-            font-weight:bold;
-            cursor:pointer;
-        }
-
-        .chat-form button:hover{
-            background:#2347d8;
-        }
-    </style>
 </head>
 
 <body>
 
 <div class="chat-container">
 
-    <div class="chat-header">
-        <h1>Chat with <%= friend %></h1>
+    <!-- ================= HEADER ================= -->
 
-        <a href="/users" class="back-btn">
-            Back
-        </a>
+    <div class="chat-header">
+
+        <h1>
+
+            Chat with <%= chattingWith %>
+
+        </h1>
+
+        <div class="top-buttons">
+
+            <a href="/users">
+
+                <button class="clear-btn">
+
+                    Back
+
+                </button>
+
+            </a>
+
+        </div>
+
     </div>
 
-    <div class="messages">
 
-        <% messages.forEach(msg => { %>
 
-            <% if(msg.sender === currentUser){ %>
+    <!-- ================= CHAT BOX ================= -->
 
-                <div class="my-message">
+    <div class="chat-box" id="chat-box">
 
-                    <div class="msg-top">
-                        <div class="username">
-                            <%= msg.sender %>
-                        </div>
+        <% messages.forEach((msg) => { %>
 
-                        <div class="time">
-                            <%= new Date(msg.createdAt).toLocaleTimeString("en-IN", {
-                                timeZone: "Asia/Kolkata",
-                                hour: "2-digit",
-                                minute: "2-digit"
-                            }) %>
-                        </div>
-                    </div>
+            <div class="message <%= msg.sender === user ? 'my-message' : 'other-message' %>">
 
-                    <div class="text">
-                        <%= msg.text %>
-                    </div>
+                <div class="message-top">
+
+                    <strong>
+
+                        <%= msg.sender %>
+
+                    </strong>
+
+                    <span class="time">
+
+                        <%= msg.time %>
+
+                    </span>
 
                 </div>
 
-            <% } else { %>
 
-                <div class="other-message">
 
-                    <div class="msg-top">
-                        <div class="username">
-                            <%= msg.sender %>
-                        </div>
+                <!-- FILES -->
 
-                        <div class="time">
-                            <%= new Date(msg.createdAt).toLocaleTimeString("en-IN", {
-                                timeZone: "Asia/Kolkata",
-                                hour: "2-digit",
-                                minute: "2-digit"
-                            }) %>
-                        </div>
-                    </div>
+                <% if(msg.file){ %>
 
-                    <div class="text">
+                    <% if(msg.file.match(/\.(jpg|jpeg|png|gif|webp)$/i)){ %>
+
+                        <img
+                            src="<%= msg.file %>"
+                            class="chat-image"
+                        >
+
+                    <% } else { %>
+
+                        <a
+                            href="<%= msg.file %>"
+                            target="_blank"
+                            class="file-link"
+                        >
+
+                            📎 <%= msg.file.split('/').pop() %>
+
+                        </a>
+
+                    <% } %>
+
+                <% } %>
+
+
+
+                <!-- TEXT -->
+
+                <% if(msg.text){ %>
+
+                    <div class="message-text">
+
                         <%= msg.text %>
+
                     </div>
 
-                </div>
+                <% } %>
 
-            <% } %>
+            </div>
 
         <% }) %>
 
     </div>
 
-    <form class="chat-form" action="/send-message" method="POST">
 
-        <input type="hidden" name="receiver" value="<%= friend %>">
 
-        <input 
-            type="text" 
-            name="message" 
-            placeholder="Type message..."
-            required
-        >
+    <!-- ================= BOTTOM BAR ================= -->
 
-        <button type="submit">
-            Send
+    <div class="bottom-bar">
+
+        <!-- MESSAGE FORM -->
+
+        <form id="chat-form" class="message-form">
+
+            <input
+                type="text"
+                id="message-input"
+                placeholder="Type message..."
+                autocomplete="off"
+                required
+            >
+
+            <button type="submit" class="send-btn">
+
+                Send
+
+            </button>
+
+        </form>
+
+
+
+        <!-- UPLOAD BUTTON -->
+
+        <button id="open-upload" class="upload-toggle-btn">
+
+            📎
+
         </button>
 
-    </form>
+    </div>
+
+
+
+    <!-- ================= HIDDEN UPLOAD ================= -->
+
+    <div id="upload-section" class="upload-section hidden-upload">
+
+        <form
+            action="/upload/<%= chattingWith %>"
+            method="POST"
+            enctype="multipart/form-data"
+            class="upload-form"
+        >
+
+            <label for="file-input" class="attach-btn">
+
+                Choose File
+
+            </label>
+
+
+
+            <input
+                type="file"
+                name="file"
+                id="file-input"
+                required
+            >
+
+
+
+            <span id="file-name">
+
+                No file selected
+
+            </span>
+
+
+
+            <button type="submit" class="upload-btn">
+
+                Upload
+
+            </button>
+
+        </form>
+
+    </div>
 
 </div>
 
+
+
+<!-- ================= SOCKET SCRIPT ================= -->
+
+<script>
+
+    const socket = io();
+
+    const form = document.getElementById("chat-form");
+
+    const input = document.getElementById("message-input");
+
+    const chatBox = document.getElementById("chat-box");
+
+
+
+    const currentUser = "<%= user %>";
+
+    const ROOM_ID = "<%= room %>";
+
+
+
+    socket.emit("join room", ROOM_ID);
+
+
+
+    // ================= SEND MESSAGE =================
+
+    form.addEventListener("submit", (e) => {
+
+        e.preventDefault();
+
+
+
+        if(input.value.trim() === ""){
+
+            return;
+
+        }
+
+
+
+        socket.emit("chat message", {
+
+            room: ROOM_ID,
+
+            user: currentUser,
+
+            message: input.value
+
+        });
+
+
+
+        input.value = "";
+
+    });
+
+
+
+    // ================= RECEIVE MESSAGE =================
+
+    socket.on("chat message", (data) => {
+
+        const div = document.createElement("div");
+
+
+
+        div.classList.add("message");
+
+
+
+        if(data.user === currentUser){
+
+            div.classList.add("my-message");
+
+        }
+
+        else{
+
+            div.classList.add("other-message");
+
+        }
+
+
+
+        div.innerHTML = `
+
+            <div class="message-top">
+
+                <strong>
+
+                    ${data.user}
+
+                </strong>
+
+                <span class="time">
+
+                    ${data.time}
+
+                </span>
+
+            </div>
+
+            <div class="message-text">
+
+                ${data.message}
+
+            </div>
+
+        `;
+
+
+
+        chatBox.appendChild(div);
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+    });
+
+
+
+    // ================= AUTO SCROLL =================
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+
+
+    // ================= UPLOAD TOGGLE =================
+
+    const openUpload = document.getElementById("open-upload");
+
+    const uploadSection = document.getElementById("upload-section");
+
+    const fileInput = document.getElementById("file-input");
+
+    const fileName = document.getElementById("file-name");
+
+
+
+    openUpload.addEventListener("click", () => {
+
+        uploadSection.classList.toggle("hidden-upload");
+
+    });
+
+
+
+    fileInput.addEventListener("change", () => {
+
+        if(fileInput.files.length > 0){
+
+            fileName.textContent = fileInput.files[0].name;
+
+        }
+
+    });
+
+</script>
+
 </body>
+
 </html>

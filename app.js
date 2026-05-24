@@ -7,6 +7,7 @@ const path = require("path");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
 const MongoStore = require("connect-mongo").default;
+const multer = require("multer");
 
 const app = express();
 const server = http.createServer(app);
@@ -14,21 +15,33 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
 
+
+
 // ================= MODELS =================
 
 const User = require("./models/User");
 const Message = require("./models/Message");
 const Request = require("./models/Request");
 
+
+
 // ================= DATABASE =================
 
 mongoose.connect(process.env.MONGO_URL)
+
 .then(() => {
+
     console.log("MongoDB Connected");
+
 })
+
 .catch((err) => {
+
     console.log(err);
+
 });
+
+
 
 // ================= VIEW ENGINE =================
 
@@ -39,6 +52,8 @@ app.set(
     path.join(__dirname, "views")
 );
 
+
+
 // ================= MIDDLEWARE =================
 
 app.use(express.static(
@@ -48,6 +63,57 @@ app.use(express.static(
 app.use(express.urlencoded({
     extended: true
 }));
+
+app.use(express.json());
+
+
+
+// ================= STATIC UPLOADS =================
+
+app.use(
+    "/uploads",
+    express.static(
+        path.join(__dirname, "public/uploads")
+    )
+);
+
+
+
+// ================= FILE UPLOAD =================
+
+const storage = multer.diskStorage({
+
+    destination: (req, file, cb) => {
+
+        cb(null, "public/uploads");
+
+    },
+
+    filename: (req, file, cb) => {
+
+        cb(
+
+            null,
+
+            Date.now() +
+
+            "-" +
+
+            file.originalname
+
+        );
+
+    }
+
+});
+
+const upload = multer({
+
+    storage
+
+});
+
+
 
 // ================= SESSION =================
 
@@ -73,6 +139,8 @@ app.use(session({
 
 }));
 
+
+
 // ================= LOGIN CHECK =================
 
 function isLoggedIn(req, res, next){
@@ -81,13 +149,17 @@ function isLoggedIn(req, res, next){
 
         next();
 
-    } else {
+    }
+
+    else{
 
         res.redirect("/login");
 
     }
 
 }
+
+
 
 // ================= HOME =================
 
@@ -97,6 +169,8 @@ app.get("/", (req, res) => {
 
 });
 
+
+
 // ================= LOGIN PAGE =================
 
 app.get("/login", (req, res) => {
@@ -105,6 +179,18 @@ app.get("/login", (req, res) => {
 
 });
 
+
+
+// ================= REGISTER PAGE =================
+
+app.get("/register", (req, res) => {
+
+    res.render("register");
+
+});
+
+
+
 // ================= ADMIN LOGIN PAGE =================
 
 app.get("/admin-login", (req, res) => {
@@ -112,6 +198,8 @@ app.get("/admin-login", (req, res) => {
     res.render("admin-login");
 
 });
+
+
 
 // ================= ADMIN LOGIN =================
 
@@ -168,6 +256,8 @@ app.post("/admin-login", async (req, res) => {
 
 });
 
+
+
 // ================= USER LOGIN =================
 
 app.post("/login", async (req, res) => {
@@ -223,13 +313,7 @@ app.post("/login", async (req, res) => {
 
 });
 
-// ================= REGISTER PAGE =================
 
-app.get("/register", (req, res) => {
-
-    res.render("register");
-
-});
 
 // ================= REGISTER USER =================
 
@@ -256,17 +340,33 @@ app.post("/register", async (req, res) => {
             10
         );
 
+        let approvedStatus = false;
+
+        // UMAR AUTO APPROVED
+
+        if(username === "umar"){
+
+            approvedStatus = true;
+
+        }
+
         const newUser = new User({
 
             username,
 
             password: hashedPassword,
 
-            approved: false
+            approved: approvedStatus
 
         });
 
         await newUser.save();
+
+        if(username === "umar"){
+
+            return res.redirect("/login");
+
+        }
 
         res.render("pending");
 
@@ -282,9 +382,15 @@ app.post("/register", async (req, res) => {
 
 });
 
+
+
 // ================= ADMIN PANEL =================
 
-app.get("/admin", isLoggedIn, async (req, res) => {
+app.get("/admin",
+
+    isLoggedIn,
+
+    async (req, res) => {
 
     if(!req.session.admin){
 
@@ -305,6 +411,8 @@ app.get("/admin", isLoggedIn, async (req, res) => {
     });
 
 });
+
+
 
 // ================= APPROVE USER =================
 
@@ -352,6 +460,8 @@ app.get("/approve/:username",
 
 });
 
+
+
 // ================= DELETE USER =================
 
 app.get("/delete-user/:username",
@@ -388,7 +498,11 @@ app.get("/delete-user/:username",
 
         await Message.deleteMany({
 
-            sender: req.params.username
+            $or: [
+
+                { sender: req.params.username }
+
+            ]
 
         });
 
@@ -406,47 +520,67 @@ app.get("/delete-user/:username",
 
 });
 
+
+
 // ================= USERS PAGE =================
 
-app.get("/users", isLoggedIn, async (req, res) => {
+app.get("/users",
 
-    const currentUser = req.session.user;
+    isLoggedIn,
 
-    const users = await User.find({
+    async (req, res) => {
 
-        username: {
+    try{
 
-            $ne: currentUser
+        const currentUser = req.session.user;
 
-        },
+        const users = await User.find({
 
-        approved: true
+            username: {
 
-    });
+                $ne: currentUser
 
-    const requests = await Request.find({
+            },
 
-        $or: [
+            approved: true
 
-            { from: currentUser },
+        });
 
-            { to: currentUser }
+        const requests = await Request.find({
 
-        ]
+            $or: [
 
-    });
+                { from: currentUser },
 
-    res.render("users", {
+                { to: currentUser }
 
-        users,
+            ]
 
-        currentUser,
+        });
 
-        requests
+        res.render("users", {
 
-    });
+            users,
+
+            currentUser,
+
+            requests
+
+        });
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+        res.send("Users Page Error");
+
+    }
 
 });
+
+
 
 // ================= SEND REQUEST =================
 
@@ -456,53 +590,71 @@ app.get("/request/:username",
 
     async (req, res) => {
 
-    const existing = await Request.findOne({
+    try{
 
-        $or: [
+        const existing = await Request.findOne({
 
-            {
+            $or: [
 
-                from: req.session.user,
+                {
 
-                to: req.params.username
+                    from: req.session.user,
 
-            },
+                    to: req.params.username
 
-            {
+                },
 
-                from: req.params.username,
+                {
 
-                to: req.session.user
+                    from: req.params.username,
 
-            }
+                    to: req.session.user
 
-        ]
+                }
 
-    });
+            ]
 
-    if(existing){
+        });
 
-        return res.redirect("/users");
+        if(existing){
+
+            return res.redirect("/users");
+
+        }
+
+        await Request.create({
+
+            from: req.session.user,
+
+            to: req.params.username,
+
+            status: "pending"
+
+        });
+
+        res.redirect("/users");
 
     }
 
-    await Request.create({
+    catch(err){
 
-        from: req.session.user,
+        console.log(err);
 
-        to: req.params.username,
+        res.send("Request Error");
 
-        status: "pending"
-
-    });
-
-    res.redirect("/users");
+    }
 
 });
 
+
+
 // ================= REQUEST PAGE =================
 
-app.get("/requests", isLoggedIn, async (req, res) => {
+app.get("/requests",
+
+    isLoggedIn,
+
+    async (req, res) => {
 
     const requests = await Request.find({
 
@@ -519,6 +671,8 @@ app.get("/requests", isLoggedIn, async (req, res) => {
     });
 
 });
+
+
 
 // ================= ACCEPT REQUEST =================
 
@@ -544,6 +698,8 @@ app.get("/accept/:id",
 
 });
 
+
+
 // ================= DECLINE REQUEST =================
 
 app.get("/decline/:id",
@@ -562,6 +718,8 @@ app.get("/decline/:id",
 
 });
 
+
+
 // ================= CHAT PAGE =================
 
 app.get("/chat/:username",
@@ -570,98 +728,220 @@ app.get("/chat/:username",
 
     async (req, res) => {
 
-    const currentUser = req.session.user;
+    try{
 
-    const otherUser = req.params.username;
+        const currentUser = req.session.user;
 
-    // CHECK PERMISSION
+        const otherUser = req.params.username;
 
-    const allowed = await Request.findOne({
+        const allowed = await Request.findOne({
 
-        $or: [
+            $or: [
 
-            {
+                {
 
-                from: currentUser,
+                    from: currentUser,
 
-                to: otherUser,
+                    to: otherUser,
 
-                status: "accepted"
+                    status: "accepted"
 
-            },
+                },
 
-            {
+                {
 
-                from: otherUser,
+                    from: otherUser,
 
-                to: currentUser,
+                    to: currentUser,
 
-                status: "accepted"
+                    status: "accepted"
 
-            }
+                }
+
+            ]
+
+        });
+
+        if(!allowed){
+
+            return res.send(
+                "You are not allowed to chat"
+            );
+
+        }
+
+        const room = [
+
+            currentUser,
+
+            otherUser
 
         ]
 
-    });
+        .sort()
 
-    if(!allowed){
+        .join("_");
 
-        return res.send(
-            "You are not allowed to chat"
+
+
+        const messages = await Message.find({
+
+            room
+
+        }).sort({
+
+            createdAt: 1
+
+        });
+
+
+
+        const formattedMessages = messages.map((msg) => {
+
+            return {
+
+                sender: msg.sender,
+
+                text: msg.text,
+
+                file: msg.file,
+
+                time: new Date(
+
+                    msg.createdAt
+
+                ).toLocaleTimeString(
+
+                    "en-IN",
+
+                    {
+
+                        timeZone: "Asia/Kolkata",
+
+                        hour: "2-digit",
+
+                        minute: "2-digit"
+
+                    }
+
+                )
+
+            };
+
+        });
+
+
+
+        res.render("chat", {
+
+            user: currentUser,
+
+            chattingWith: otherUser,
+
+            room,
+
+            messages: formattedMessages
+
+        });
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+        res.send("Chat Error");
+
+    }
+
+});
+
+
+
+// ================= FILE UPLOAD =================
+
+app.post(
+
+    "/upload/:friend",
+
+    isLoggedIn,
+
+    upload.single("file"),
+
+    async (req, res) => {
+
+    try{
+
+        const sender = req.session.user;
+
+        const receiver = req.params.friend;
+
+        const room = [
+
+            sender,
+
+            receiver
+
+        ]
+
+        .sort()
+
+        .join("_");
+
+
+
+        if(!req.file){
+
+            return res.send(
+                "No file uploaded"
+            );
+
+        }
+
+
+
+        const filePath =
+        "/uploads/" + req.file.filename;
+
+
+
+        const newMessage = new Message({
+
+            room,
+
+            sender,
+
+            text: "",
+
+            file: filePath
+
+        });
+
+
+
+        await newMessage.save();
+
+
+
+        res.redirect(
+
+            "/chat/" + receiver
+
         );
 
     }
 
-    const room = [
+    catch(err){
 
-        currentUser,
+        console.log(err);
 
-        otherUser
+        res.send("Upload Error");
 
-    ]
-
-    .sort()
-
-    .join("_");
-
-    const messages = await Message.find({
-        room
-    });
-
-    const formattedMessages = messages.map((msg) => {
-
-        return {
-
-            sender: msg.sender,
-
-            text: msg.text,
-
-            time: new Date(
-                msg.createdAt
-            ).toLocaleTimeString([], {
-
-                hour: "2-digit",
-                minute: "2-digit"
-
-            })
-
-        };
-
-    });
-
-    res.render("chat", {
-
-        user: currentUser,
-
-        room,
-
-        messages: formattedMessages,
-
-        chattingWith: otherUser
-
-    });
+    }
 
 });
+
+
 
 // ================= LOGOUT =================
 
@@ -675,17 +955,23 @@ app.get("/logout", (req, res) => {
 
 });
 
-// ================= SOCKET.IO =================
+
+
+// ================= SOCKET =================
 
 io.on("connection", (socket) => {
 
     console.log("User Connected");
+
+
 
     socket.on("join room", (room) => {
 
         socket.join(room);
 
     });
+
+
 
     socket.on("chat message", async (data) => {
 
@@ -703,6 +989,8 @@ io.on("connection", (socket) => {
 
             await newMessage.save();
 
+
+
             io.to(data.room).emit(
 
                 "chat message",
@@ -715,13 +1003,21 @@ io.on("connection", (socket) => {
 
                     time: new Date()
 
-                    .toLocaleTimeString([], {
+                    .toLocaleTimeString(
 
-                        hour: "2-digit",
+                        "en-IN",
 
-                        minute: "2-digit"
+                        {
 
-                    })
+                            timeZone: "Asia/Kolkata",
+
+                            hour: "2-digit",
+
+                            minute: "2-digit"
+
+                        }
+
+                    )
 
                 }
 
@@ -737,6 +1033,8 @@ io.on("connection", (socket) => {
 
     });
 
+
+
     socket.on("disconnect", () => {
 
         console.log("User Disconnected");
@@ -745,7 +1043,9 @@ io.on("connection", (socket) => {
 
 });
 
-// ================= ERROR HANDLER =================
+
+
+// ================= ERROR =================
 
 app.use((err, req, res, next) => {
 
@@ -754,6 +1054,8 @@ app.use((err, req, res, next) => {
     res.status(500).send(err.message);
 
 });
+
+
 
 // ================= SERVER =================
 
