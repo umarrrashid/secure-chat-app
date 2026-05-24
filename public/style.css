@@ -816,3 +816,419 @@ body{
         transform:translateY(0);
     }
 }
+
+/* ================= BOTTOM BUTTONS ================= */
+
+.bottom-buttons{
+
+    display:flex;
+
+    gap:14px;
+
+    margin-top:18px;
+}
+
+
+
+/* ================= REQUESTS + LOGOUT ================= */
+
+.bottom-buttons a{
+
+    text-decoration:none;
+}
+
+.bottom-buttons button{
+
+    border:none;
+
+    padding:14px 22px;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    color:white;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    transition:0.3s;
+}
+
+
+
+/* REQUEST BUTTON */
+
+.requests-btn{
+
+    background:
+    linear-gradient(
+    135deg,
+    #137209,
+    #107603
+    );
+}
+
+
+
+/* LOGOUT BUTTON */
+
+.logout-btn{
+
+    background:
+    linear-gradient(
+    135deg,
+    #ff4b4b,
+    #ff2020
+    );
+}
+
+
+
+/* HOVER EFFECT */
+
+.requests-btn:hover,
+.logout-btn:hover{
+
+    transform:translateY(-2px);
+
+    opacity:0.95;
+}
+
+
+/* ================= REQUEST PAGE ================= */
+
+.requests-page{
+
+    margin:0;
+
+    padding:0;
+
+    font-family:sans-serif;
+
+    min-height:100vh;
+
+    background:
+    linear-gradient(
+    135deg,
+    #06142e,
+    #273469,
+    #4b3f96
+    );
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+}
+
+
+
+/* MAIN BOX */
+
+.requests-container{
+
+    width:100%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+}
+
+
+
+.requests-card{
+
+    width:650px;
+
+    background:rgba(255,255,255,0.12);
+
+    backdrop-filter:blur(15px);
+
+    border-radius:28px;
+
+    padding:35px;
+
+    box-shadow:
+    0 10px 40px rgba(0,0,0,0.35);
+}
+
+
+
+/* HEADER */
+
+.requests-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:30px;
+}
+
+
+
+.requests-header h1{
+
+    color:white;
+
+    font-size:48px;
+
+    margin:0;
+}
+
+
+
+/* BACK BUTTON */
+
+.back-btn{
+
+    border:none;
+
+    padding:12px 22px;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    color:white;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    background:
+    linear-gradient(
+    135deg,
+    #2f6df6,
+    #4a47ff
+    );
+
+    transition:0.3s;
+}
+
+
+
+.back-btn:hover{
+
+    transform:translateY(-2px);
+}
+
+
+
+/* EMPTY BOX */
+
+.empty-box{
+
+    background:rgba(255,255,255,0.08);
+
+    border-radius:20px;
+
+    padding:50px;
+
+    text-align:center;
+
+    color:white;
+}
+
+
+
+.empty-box h2{
+
+    margin-bottom:10px;
+
+    font-size:32px;
+}
+
+
+
+.empty-box p{
+
+    opacity:0.8;
+}
+
+
+
+/* USER CARD */
+
+.request-user-card{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    background:rgba(255,255,255,0.10);
+
+    border-radius:22px;
+
+    padding:20px;
+
+    margin-bottom:20px;
+}
+
+
+
+/* LEFT SIDE */
+
+.request-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+}
+
+
+
+/* AVATAR */
+
+.avatar{
+
+    width:65px;
+
+    height:65px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:28px;
+
+    font-weight:bold;
+
+    color:white;
+
+    background:
+    linear-gradient(
+    135deg,
+    #6d4aff,
+    #4f8cff
+    );
+}
+
+
+
+/* USER INFO */
+
+.user-info h3{
+
+    margin:0;
+
+    color:white;
+
+    font-size:26px;
+}
+
+
+
+.user-info span{
+
+    color:#8dff9f;
+
+    font-size:15px;
+}
+
+
+
+/* ACTION BUTTONS */
+
+.request-actions{
+
+    display:flex;
+
+    gap:12px;
+}
+
+
+
+.request-actions form{
+
+    margin:0;
+}
+
+
+
+/* APPROVE BUTTON */
+
+.approve-btn{
+
+    border:none;
+
+    padding:12px 20px;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    background:
+    linear-gradient(
+    135deg,
+    #00c853,
+    #00e676
+    );
+
+    transition:0.3s;
+}
+
+
+
+.approve-btn:hover{
+
+    transform:translateY(-2px);
+}
+
+
+
+/* DELETE BUTTON */
+
+.delete-btn{
+
+    border:none;
+
+    padding:12px 20px;
+
+    border-radius:14px;
+
+    cursor:pointer;
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    background:
+    linear-gradient(
+    135deg,
+    #ff4b4b,
+    #ff2020
+    );
+
+    transition:0.3s;
+}
+
+
+
+.delete-btn:hover{
+
+    transform:translateY(-2px);
+}

@@ -5,98 +5,132 @@
 
     <meta charset="UTF-8">
 
-    <title>Requests</title>
+    <meta name="viewport"
+    content="width=device-width, initial-scale=1.0">
 
-    <style>
+    <title>Chat Requests</title>
 
-        body{
-
-            font-family:Arial;
-
-            background:#111827;
-
-            color:white;
-
-            padding:40px;
-
-        }
-
-        .card{
-
-            background:#1f2937;
-
-            padding:20px;
-
-            margin-bottom:20px;
-
-            border-radius:15px;
-
-        }
-
-        a{
-
-            padding:10px 20px;
-
-            border-radius:10px;
-
-            text-decoration:none;
-
-            color:white;
-
-            margin-right:10px;
-
-        }
-
-        .accept{
-
-            background:#22c55e;
-
-        }
-
-        .decline{
-
-            background:#ef4444;
-
-        }
-
-    </style>
+    <link rel="stylesheet" href="/style.css">
 
 </head>
 
-<body>
+<body class="requests-page">
 
-<h1>Chat Requests</h1>
+    <div class="requests-container">
 
-<% requests.forEach((request) => { %>
+        <div class="requests-card">
 
-    <div class="card">
+            <div class="requests-header">
 
-        <h2>
+                <h1>Chat Requests</h1>
 
-            <%= request.from %>
-            wants to chat
+                <a href="/users">
 
-        </h2>
+                    <button class="back-btn">
 
-        <a
-           class="accept"
-           href="/accept/<%= request._id %>">
+                        Back
 
-           Approve
+                    </button>
 
-        </a>
+                </a>
 
-        <a
-           class="decline"
-           href="/decline/<%= request._id %>">
+            </div>
 
-           Delete
 
-        </a>
+
+            <% if(requests.length === 0){ %>
+
+                <div class="empty-box">
+
+                    <h2>No Requests Yet</h2>
+
+                    <p>
+                        New chat requests will appear here
+                    </p>
+
+                </div>
+
+            <% } %>
+
+
+
+            <% requests.forEach((req)=>{ %>
+
+                <div class="request-user-card">
+
+                    <div class="request-left">
+
+                        <div class="avatar">
+
+                            <%= req.sender.charAt(0).toUpperCase() %>
+
+                        </div>
+
+                        <div class="user-info">
+
+                            <h3>
+
+                                <%= req.sender %>
+
+                            </h3>
+
+                            <span>
+
+                                wants to chat with you
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="request-actions">
+
+                        <form
+                            action="/approve/<%= req.sender %>"
+                            method="POST"
+                        >
+
+                            <button
+                                type="submit"
+                                class="approve-btn"
+                            >
+
+                                Approve
+
+                            </button>
+
+                        </form>
+
+
+
+                        <form
+                            action="/delete-request/<%= req.sender %>"
+                            method="POST"
+                        >
+
+                            <button
+                                type="submit"
+                                class="delete-btn"
+                            >
+
+                                Delete
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+            <% }) %>
+
+        </div>
 
     </div>
-
-<% }) %>
 
 </body>
 
