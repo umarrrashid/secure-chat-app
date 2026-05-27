@@ -550,7 +550,7 @@ body{
 
 .users-container{
 
-    width:440px;
+    width:840px;
 
     padding:32px;
 
@@ -1388,4 +1388,431 @@ body{
 
     background:
     rgba(255,255,255,0.25);
+}
+
+.password-btn{
+
+    background: #7c3aed;
+
+    color: white;
+
+    border: none;
+
+    padding: 12px 18px;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    font-weight: bold;
+
+    transition: 0.3s;
+
+}
+
+.password-btn:hover{
+
+    transform: scale(1.05);
+
+}
+
+/* ================= CHANGE PASSWORD PAGE ================= */
+
+.change-password-page{
+
+    width: 100%;
+
+    min-height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+}
+
+.change-password-box{
+
+    width: 420px;
+
+    background: rgba(255,255,255,0.10);
+
+    backdrop-filter: blur(14px);
+
+    padding: 40px;
+
+    border-radius: 28px;
+
+    box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+
+    text-align: center;
+
+}
+
+.change-password-box h1{
+
+    color: white;
+
+    font-size: 52px;
+
+    margin-bottom: 10px;
+
+}
+
+.change-password-box p{
+
+    color: rgba(255,255,255,0.7);
+
+    margin-bottom: 30px;
+
+    font-size: 16px;
+
+}
+
+.change-password-form{
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 18px;
+
+}
+
+.change-password-form input{
+
+    width: 100%;
+
+    padding: 16px;
+
+    border: none;
+
+    outline: none;
+
+    border-radius: 14px;
+
+    background: rgba(255,255,255,0.12);
+
+    color: white;
+
+    font-size: 16px;
+
+    box-sizing: border-box;
+
+}
+
+.change-password-form input::placeholder{
+
+    color: rgba(255,255,255,0.6);
+
+}
+
+.update-btn{
+
+    width: 100%;
+
+    padding: 16px;
+
+    border: none;
+
+    border-radius: 14px;
+
+    background: linear-gradient(
+        135deg,
+        #4f46e5,
+        #2563eb
+    );
+
+    color: white;
+
+    font-size: 17px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+
+}
+
+.update-btn:hover{
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 10px 25px rgba(37,99,235,0.4);
+
+}
+
+.back-btn{
+
+    width: 100%;
+
+    margin-top: 18px;
+
+    padding: 15px;
+
+    border: none;
+
+    border-radius: 14px;
+
+    background: rgba(255,255,255,0.12);
+
+    color: white;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+
+}
+
+.back-btn:hover{
+
+    background: rgba(255,255,255,0.2);
+
+}
+
+
+/* ================= PASSWORD SUCCESS ================= */
+
+.success-page{
+
+    width: 100%;
+
+    min-height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+}
+
+.success-box{
+
+    width: 430px;
+
+    background: rgba(255,255,255,0.10);
+
+    backdrop-filter: blur(18px);
+
+    border-radius: 30px;
+
+    padding: 45px;
+
+    text-align: center;
+
+    box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+
+}
+
+.success-icon{
+
+    font-size: 70px;
+
+    margin-bottom: 20px;
+
+}
+
+.success-box h1{
+
+    color: white;
+
+    font-size: 48px;
+
+    margin-bottom: 12px;
+
+}
+
+.success-box p{
+
+    color: rgba(255,255,255,0.75);
+
+    font-size: 17px;
+
+    line-height: 1.6;
+
+    margin-bottom: 30px;
+
+}
+
+.success-buttons{
+
+    display: flex;
+
+    gap: 14px;
+
+    justify-content: center;
+
+}
+
+.success-btn{
+
+    padding: 15px 26px;
+
+    border-radius: 16px;
+
+    text-decoration: none;
+
+    background: linear-gradient(
+        135deg,
+        #4f46e5,
+        #2563eb
+    );
+
+    color: white;
+
+    font-weight: bold;
+
+    transition: 0.3s;
+
+}
+
+.success-btn:hover{
+
+    transform: translateY(-2px);
+
+    opacity: 0.9;
+
+}
+
+.secondary-btn{
+
+    padding: 15px 26px;
+
+    border-radius: 16px;
+
+    text-decoration: none;
+
+    background: rgba(255,255,255,0.10);
+
+    border: 1px solid rgba(255,255,255,0.15);
+
+    color: white;
+
+    font-weight: bold;
+
+    transition: 0.3s;
+
+}
+
+.secondary-btn:hover{
+
+    background: rgba(255,255,255,0.16);
+
+}
+
+
+.bottom-buttons {
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 15px;
+
+    margin-top: 20px;
+
+    width: 100%;
+
+}
+
+.bottom-buttons a {
+
+    text-decoration: none;
+
+}
+
+.requests-btn,
+.logout-btn,
+.change-password-btn {
+
+    min-width: 130px;
+
+    height: 50px;
+
+    border: none;
+
+    border-radius: 14px;
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+
+    color: white;
+
+}
+
+.requests-btn {
+
+    background: #1f8f00;
+
+}
+
+.logout-btn {
+
+    background: #ff4343;
+
+}
+
+.change-password-btn {
+
+    background: linear-gradient(135deg, #6a5cff, #8f3dff);
+
+}
+
+.requests-btn:hover,
+.logout-btn:hover,
+.change-password-btn:hover {
+
+    transform: translateY(-2px);
+
+    opacity: 0.9;
+
+}
+
+
+.requests-btn,
+.logout-btn,
+.change-password-btn {
+
+    min-width: 130px;
+
+    height: 50px;
+
+    border: none;
+
+    border-radius: 14px;
+
+    font-size: 16px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+    line-height: 1.2;
+
+    padding: 0 18px;
+
 }

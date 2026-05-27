@@ -5,13 +5,11 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Users</title>
 
-    <link rel="stylesheet"
-          href="/style.css">
+    <link rel="stylesheet" href="/style.css">
 
 </head>
 
@@ -29,7 +27,7 @@
 
 
 
-        <% users.forEach(user => { %>
+        <% users.forEach(user=> { %>
 
             <div class="user-card">
 
@@ -63,15 +61,13 @@
 
                 <div>
 
-                    <%
-
-                    let relation = requests.find(r =>
+                    <% let relation=requests.find(r=>
 
                         (
 
-                            r.sender === currentUser &&
+                        r.sender === currentUser &&
 
-                            r.receiver === user.username
+                        r.receiver === user.username
 
                         )
 
@@ -79,117 +75,117 @@
 
                         (
 
-                            r.sender === user.username &&
+                        r.sender === user.username &&
 
-                            r.receiver === currentUser
+                        r.receiver === currentUser
 
                         )
 
-                    );
+                        );
 
-                    %>
-
-
-
-                    <!-- NO REQUEST -->
-
-                    <% if(!relation){ %>
-
-                        <form
-                            action="/request/<%= user.username %>"
-                            method="POST"
-                        >
-
-                            <button
-                                type="submit"
-                                class="request-btn"
-                            >
-
-                                Request
-
-                            </button>
-
-                        </form>
+                        %>
 
 
 
-                    <!-- PENDING -->
+                        <!-- NO REQUEST -->
 
-                    <% } else if(relation.status === "pending"){ %>
+                        <% if(!relation){ %>
 
+                            <form action="/request/<%= user.username %>" method="POST">
 
+                                <button type="submit" class="request-btn">
 
-                        <!-- RECEIVED REQUEST -->
+                                    Request
 
-                        <% if(relation.receiver === currentUser){ %>
+                                </button>
 
-                            <a href="/requests"
-                               class="chat-btn">
-
-                                Requested
-
-                            </a>
-
-                        <% } else { %>
-
-                            <button class="pending-btn">
-
-                                Pending
-
-                            </button>
-
-                        <% } %>
+                            </form>
 
 
 
-                    <!-- ACCEPTED -->
+                            <!-- PENDING -->
 
-                    <% } else if(relation.status === "accepted"){ %>
+                            <% } else if(relation.status==="pending" ){ %>
 
-                        <a href="/chat/<%= user.username %>"
-                           class="chat-btn">
 
-                            Chat
 
-                        </a>
+                                <!-- RECEIVED REQUEST -->
 
-                    <% } %>
+                                <% if(relation.receiver===currentUser){ %>
+
+                                    <a href="/requests" class="chat-btn">
+
+                                        Requested
+
+                                    </a>
+
+                                    <% } else { %>
+
+                                        <button class="pending-btn">
+
+                                            Pending
+
+                                        </button>
+
+                                        <% } %>
+
+
+
+                                            <!-- ACCEPTED -->
+
+                                            <% } else if(relation.status==="accepted" ){ %>
+
+                                                <a href="/chat/<%= user.username %>" class="chat-btn">
+
+                                                    Chat
+
+                                                </a>
+
+                                                <% } %>
 
                 </div>
 
             </div>
 
-        <% }) %>
+            <% }) %>
 
 
 
-        <!-- BOTTOM BUTTONS -->
+                <!-- BOTTOM BUTTONS -->
 
-        <div class="bottom-buttons">
+                <div class="bottom-buttons">
 
-            <a href="/requests">
+    <a href="/requests">
 
-                <button class="requests-btn">
+        <button class="requests-btn">
 
-                    Requests
+            Requests
 
-                </button>
+        </button>
 
-            </a>
+    </a>
 
+    <a href="/logout">
 
+        <button class="logout-btn">
 
-            <a href="/logout">
+            Logout
 
-                <button class="logout-btn">
+        </button>
 
-                    Logout
+    </a>
 
-                </button>
+    <a href="/change-password">
 
-            </a>
+        <button class="change-password-btn">
 
-        </div>
+            Change Password
+
+        </button>
+
+    </a>
+
+</div>
 
     </div>
 

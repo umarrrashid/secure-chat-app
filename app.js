@@ -1076,6 +1076,91 @@ app.get("/logout", (req, res) => {
 });
 
 
+// ================= CHANGE PASSWORD PAGE =================
+app.get("/change-password", (req, res) => {
+
+    if (!req.session.user) {
+
+        return res.redirect("/login");
+
+    }
+
+    res.render("change-password");
+
+});
+
+// ================= CHANGE PASSWORD =================
+
+app.post("/change-password", async (req, res) => {
+
+    if (!req.session.user) {
+
+        return res.redirect("/login");
+
+    }
+
+    const {
+
+        currentPassword,
+        newPassword,
+        confirmPassword
+
+    } = req.body;
+
+
+
+    if (newPassword !== confirmPassword) {
+
+        return res.send("Passwords do not match");
+
+    }
+
+
+
+    const user = await User.findOne({
+
+        username: req.session.user
+
+    });
+
+
+
+    const match = await bcrypt.compare(
+
+        currentPassword,
+        user.password
+
+    );
+
+
+
+    if (!match) {
+
+        return res.send("Current password is incorrect");
+
+    }
+
+
+
+    const hashedPassword = await bcrypt.hash(
+
+        newPassword,
+        10
+
+    );
+
+
+
+    user.password = hashedPassword;
+
+    await user.save();
+
+
+
+    res.render("password-success");
+
+});
+
 
 // ================= SOCKET =================
 
