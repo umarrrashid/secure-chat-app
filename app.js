@@ -1,11 +1,41 @@
 require("dotenv").config();
 
+console.log("MONGO_URL:", process.env.MONGO_URL);
+console.log("SESSION_SECRET:", process.env.SESSION_SECRET);
+
+require("dotenv").config();
+
 const express = require("express");
 const http = require("http");
 const mongoose = require("mongoose");
+
+mongoose.connect(process.env.MONGO_URL)
+
+.then(() => {
+
+    console.log("MongoDB Connected");
+
+})
+
+.catch((err) => {
+
+    console.log("MongoDB Error:", err);
+
+});
+
 const path = require("path");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
+
+app.use(session({
+
+    secret: process.env.SESSION_SECRET || "secret",
+
+    resave: false,
+
+    saveUninitialized: false
+
+}));
 const MongoStore = require("connect-mongo").default;
 const multer = require("multer");
 
@@ -434,7 +464,7 @@ app.get("/admin",
 // ================= APPROVE USER =================
 
 app.get("/approve/:username",
-    
+
     isLoggedIn,
 
     async (req, res) => {
@@ -1295,12 +1325,8 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, () => {
+app.listen(PORT, () => {
 
-    console.log(
-
-        `Server Running On Port ${PORT}`
-
-    );
+    console.log(`Server running on ${PORT}`);
 
 });
