@@ -3,11 +3,30 @@ require("dotenv").config();
 console.log("MONGO_URL:", process.env.MONGO_URL);
 console.log("SESSION_SECRET:", process.env.SESSION_SECRET);
 
-require("dotenv").config();
+
+
+// ================= IMPORTS =================
 
 const express = require("express");
+const app = express();
+
 const http = require("http");
+const server = http.createServer(app);
+
 const mongoose = require("mongoose");
+const path = require("path");
+const bcrypt = require("bcrypt");
+const session = require("express-session");
+const MongoStore = require("connect-mongo").default;
+const multer = require("multer");
+
+const { Server } = require("socket.io");
+
+const io = new Server(server);
+
+
+
+// ================= DATABASE =================
 
 mongoose.connect(process.env.MONGO_URL)
 
@@ -23,9 +42,8 @@ mongoose.connect(process.env.MONGO_URL)
 
 });
 
-const path = require("path");
-const bcrypt = require("bcrypt");
-const session = require("express-session");
+
+// ================= SESSION =================
 
 app.use(session({
 
@@ -33,17 +51,16 @@ app.use(session({
 
     resave: false,
 
-    saveUninitialized: false
+    saveUninitialized: false,
+
+    store: MongoStore.create({
+
+        mongoUrl: process.env.MONGO_URL
+
+    })
 
 }));
-const MongoStore = require("connect-mongo").default;
-const multer = require("multer");
 
-const app = express();
-const server = http.createServer(app);
-
-const { Server } = require("socket.io");
-const io = new Server(server);
 
 
 
@@ -54,22 +71,6 @@ const Message = require("./models/Message");
 const Request = require("./models/Request");
 
 
-
-// ================= DATABASE =================
-
-mongoose.connect(process.env.MONGO_URI)
-
-.then(() => {
-
-    console.log("MongoDB Connected");
-
-})
-
-.catch((err) => {
-
-    console.log(err);
-
-});
 
 
 
@@ -145,41 +146,32 @@ const upload = multer({
 
 
 
-// ================= SESSION STORE =================
 
-const store = MongoStore.create({
-
-    mongoUrl: process.env.MONGO_URI,
-
-    crypto: {
-
-        secret: process.env.SESSION_SECRET,
-
-    },
-
-    touchAfter: 24 * 3600,
-
-});
 
 
 
 // ================= SESSION =================
-
 app.use(session({
 
-    store: store,
-
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "secret",
 
     resave: false,
 
     saveUninitialized: false,
 
+    store: MongoStore.create({
+
+        mongoUrl: process.env.MONGO_URL
+
+    }),
+
     cookie: {
 
         expires:
-        Date.now() +
-        7 * 24 * 60 * 60 * 1000,
+        new Date(
+            Date.now() +
+            7 * 24 * 60 * 60 * 1000
+        ),
 
         maxAge:
         7 * 24 * 60 * 60 * 1000,
@@ -189,8 +181,6 @@ app.use(session({
     }
 
 }));
-
-
 
 // ================= LOGIN CHECK =================
 
