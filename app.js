@@ -27,7 +27,7 @@ const Request = require("./models/Request");
 
 // ================= DATABASE =================
 
-mongoose.connect(process.env.MONGO_URL)
+mongoose.connect(process.env.MONGO_URI)
 
 .then(() => {
 
@@ -115,9 +115,29 @@ const upload = multer({
 
 
 
+// ================= SESSION STORE =================
+
+const store = MongoStore.create({
+
+    mongoUrl: process.env.MONGO_URI,
+
+    crypto: {
+
+        secret: process.env.SESSION_SECRET,
+
+    },
+
+    touchAfter: 24 * 3600,
+
+});
+
+
+
 // ================= SESSION =================
 
 app.use(session({
+
+    store: store,
 
     secret: process.env.SESSION_SECRET,
 
@@ -125,15 +145,16 @@ app.use(session({
 
     saveUninitialized: false,
 
-    store: MongoStore.create({
-
-        mongoUrl: process.env.MONGO_URL
-
-    }),
-
     cookie: {
 
-        maxAge: 1000 * 60 * 60 * 24
+        expires:
+        Date.now() +
+        7 * 24 * 60 * 60 * 1000,
+
+        maxAge:
+        7 * 24 * 60 * 60 * 1000,
+
+        httpOnly: true
 
     }
 
@@ -412,8 +433,8 @@ app.get("/admin",
 
 // ================= APPROVE USER =================
 
-app.get("/approve-user/:username",
-
+app.get("/approve/:username",
+    
     isLoggedIn,
 
     async (req, res) => {
@@ -613,51 +634,53 @@ app.post("/request/:username",
         }
 
 
-const existingRequest =
-await Request.findOne({
 
-    $or:[
+        const existingRequest =
+        await Request.findOne({
 
-        {
+            $or:[
 
-            sender,
-            receiver,
+                {
 
-            status: {
+                    sender,
+                    receiver,
 
-                $in: [
+                    status: {
 
-                    "pending",
-                    "accepted"
+                        $in: [
 
-                ]
+                            "pending",
+                            "accepted"
 
-            }
+                        ]
 
-        },
+                    }
 
-        {
+                },
 
-            sender: receiver,
+                {
 
-            receiver: sender,
+                    sender: receiver,
 
-            status: {
+                    receiver: sender,
 
-                $in: [
+                    status: {
 
-                    "pending",
-                    "accepted"
+                        $in: [
 
-                ]
+                            "pending",
+                            "accepted"
 
-            }
+                        ]
 
-        }
+                    }
 
-    ]
+                }
 
-});
+            ]
+
+        });
+
 
 
         if(existingRequest){
@@ -827,6 +850,7 @@ app.post(
     }
 
 });
+
 
 
 // ================= CHAT PAGE =================
@@ -1076,7 +1100,9 @@ app.get("/logout", (req, res) => {
 });
 
 
+
 // ================= CHANGE PASSWORD PAGE =================
+
 app.get("/change-password", (req, res) => {
 
     if (!req.session.user) {
@@ -1088,6 +1114,8 @@ app.get("/change-password", (req, res) => {
     res.render("change-password");
 
 });
+
+
 
 // ================= CHANGE PASSWORD =================
 
@@ -1160,6 +1188,7 @@ app.post("/change-password", async (req, res) => {
     res.render("password-success");
 
 });
+
 
 
 // ================= SOCKET =================
