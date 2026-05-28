@@ -1,4 +1,12 @@
 {
+  "name": "secure-chat-app",
+  "version": "1.0.0",
+  "main": "app.js",
+
+  "scripts": {
+    "start": "node app.js"
+  },
+
   "dependencies": {
     "bcrypt": "^6.0.0",
     "connect-mongo": "^6.0.0",
